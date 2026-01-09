@@ -1,67 +1,111 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  company?: string;
-  role: 'user' | 'admin';
-  credits: number;
-  avatar?: string;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, name: string) => Promise<boolean>;
-  logout: () => void;
-  isAdmin: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ error: Error | null }>;
+  register: (email: string, password: string, fullName: string, companyName?: string) => Promise<{ error: Error | null }>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (email: string, _password: string): Promise<boolean> => {
-    // Mock login - replace with real API
-    const isAdmin = email.includes('admin');
-    setUser({
-      id: '1',
-      email,
-      name: email.split('@')[0],
-      company: 'Acme Corp',
-      role: isAdmin ? 'admin' : 'user',
-      credits: 5000,
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
     });
-    return true;
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<{ error: Error | null }> => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      return { error };
+    }
+    return { error: null };
   };
 
-  const register = async (email: string, _password: string, name: string): Promise<boolean> => {
-    setUser({
-      id: '1',
+  const register = async (
+    email: string, 
+    password: string, 
+    fullName: string, 
+    companyName?: string
+  ): Promise<{ error: Error | null }> => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
       email,
-      name,
-      role: 'user',
-      credits: 1000,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          company_name: companyName,
+        },
+      },
     });
-    return true;
+    
+    if (error) {
+      return { error };
+    }
+    return { error: null };
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const resetPassword = async (email: string): Promise<{ error: Error | null }> => {
+    const redirectUrl = `${window.location.origin}/reset-password`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
+    });
+    
+    if (error) {
+      return { error };
+    }
+    return { error: null };
   };
 
   return (
     <AuthContext.Provider 
       value={{ 
         user, 
-        isAuthenticated: !!user, 
+        session,
+        isAuthenticated: !!user,
+        isLoading,
         login, 
         register, 
         logout,
-        isAdmin: user?.role === 'admin'
+        resetPassword,
       }}
     >
       {children}
