@@ -7,7 +7,8 @@ import {
   Trash2,
   Save,
   Download,
-  Globe
+  Globe,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage, timezones } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -44,7 +45,7 @@ export const SettingsPage = () => {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, timezone, setTimezone, t } = useLanguage();
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -81,6 +82,8 @@ export const SettingsPage = () => {
       description: t('settings.exportReady'),
     });
   };
+
+  const currentTimezone = timezones.find(tz => tz.value === timezone);
 
   if (isLoading) {
     return (
@@ -253,21 +256,55 @@ export const SettingsPage = () => {
             <Card className="bg-card">
               <CardHeader>
                 <CardTitle>{t('settings.preferences')}</CardTitle>
-                <CardDescription>{t('settings.languageDesc')}</CardDescription>
+                <CardDescription>{t('settings.preferencesDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{t('settings.language')}</p>
-                    <p className="text-sm text-muted-foreground">{t('settings.languageDesc')}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{t('settings.language')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.languageDesc')}</p>
+                    </div>
                   </div>
                   <Select value={language} onValueChange={(value: 'es' | 'en') => setLanguage(value)}>
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="es">🇪🇸 {t('settings.spanish')}</SelectItem>
                       <SelectItem value="en">🇺🇸 {t('settings.english')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{t('settings.timezone')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.timezoneDesc')}</p>
+                    </div>
+                  </div>
+                  <Select value={timezone} onValueChange={setTimezone}>
+                    <SelectTrigger className="w-64">
+                      <SelectValue>
+                        {currentTimezone ? `${currentTimezone.label} (${currentTimezone.offset})` : t('settings.selectTimezone')}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80">
+                      {timezones.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          <span className="flex items-center gap-2">
+                            <span>{tz.label}</span>
+                            <span className="text-muted-foreground text-xs">({tz.offset})</span>
+                          </span>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

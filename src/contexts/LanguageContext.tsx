@@ -2,11 +2,55 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 export type Language = 'es' | 'en';
 
+export interface TimezoneOption {
+  value: string;
+  label: string;
+  offset: string;
+}
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  timezone: string;
+  setTimezone: (tz: string) => void;
   t: (key: string) => string;
+  formatDate: (date: Date | string) => string;
+  formatDateTime: (date: Date | string) => string;
+  formatTime: (date: Date | string) => string;
 }
+
+export const timezones: TimezoneOption[] = [
+  // América del Sur
+  { value: 'America/Argentina/Buenos_Aires', label: 'Argentina (Buenos Aires)', offset: 'UTC-3' },
+  { value: 'America/Sao_Paulo', label: 'Brasil (São Paulo)', offset: 'UTC-3' },
+  { value: 'America/Santiago', label: 'Chile (Santiago)', offset: 'UTC-4' },
+  { value: 'America/Bogota', label: 'Colombia (Bogotá)', offset: 'UTC-5' },
+  { value: 'America/Lima', label: 'Perú (Lima)', offset: 'UTC-5' },
+  { value: 'America/Montevideo', label: 'Uruguay (Montevideo)', offset: 'UTC-3' },
+  { value: 'America/Caracas', label: 'Venezuela (Caracas)', offset: 'UTC-4' },
+  
+  // América del Norte
+  { value: 'America/Mexico_City', label: 'México (Ciudad de México)', offset: 'UTC-6' },
+  { value: 'America/New_York', label: 'Estados Unidos (Nueva York)', offset: 'UTC-5' },
+  { value: 'America/Los_Angeles', label: 'Estados Unidos (Los Ángeles)', offset: 'UTC-8' },
+  { value: 'America/Chicago', label: 'Estados Unidos (Chicago)', offset: 'UTC-6' },
+  
+  // Europa
+  { value: 'Europe/Madrid', label: 'España (Madrid)', offset: 'UTC+1' },
+  { value: 'Europe/London', label: 'Reino Unido (Londres)', offset: 'UTC+0' },
+  { value: 'Europe/Paris', label: 'Francia (París)', offset: 'UTC+1' },
+  { value: 'Europe/Berlin', label: 'Alemania (Berlín)', offset: 'UTC+1' },
+  { value: 'Europe/Rome', label: 'Italia (Roma)', offset: 'UTC+1' },
+  
+  // Asia
+  { value: 'Asia/Tokyo', label: 'Japón (Tokio)', offset: 'UTC+9' },
+  { value: 'Asia/Shanghai', label: 'China (Shanghái)', offset: 'UTC+8' },
+  { value: 'Asia/Dubai', label: 'Emiratos Árabes (Dubái)', offset: 'UTC+4' },
+  
+  // Oceanía
+  { value: 'Australia/Sydney', label: 'Australia (Sídney)', offset: 'UTC+11' },
+  { value: 'Pacific/Auckland', label: 'Nueva Zelanda (Auckland)', offset: 'UTC+13' },
+];
 
 const translations: Record<Language, Record<string, string>> = {
   es: {
@@ -60,6 +104,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.notifications': 'Notificaciones',
     'settings.security': 'Seguridad',
     'settings.preferences': 'Preferencias',
+    'settings.preferencesDesc': 'Configura idioma y zona horaria',
     'settings.profileInfo': 'Información del Perfil',
     'settings.updatePersonalDetails': 'Actualiza tus datos personales',
     'settings.changeAvatar': 'Cambiar Avatar',
@@ -107,6 +152,9 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.languageDesc': 'Selecciona el idioma de la interfaz',
     'settings.spanish': 'Español',
     'settings.english': 'Inglés',
+    'settings.timezone': 'Zona Horaria',
+    'settings.timezoneDesc': 'Todas las fechas y horas se mostrarán en esta zona horaria',
+    'settings.selectTimezone': 'Seleccionar zona horaria',
     
     // Agents
     'agents.title': 'Agentes IA',
@@ -252,6 +300,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.notifications': 'Notifications',
     'settings.security': 'Security',
     'settings.preferences': 'Preferences',
+    'settings.preferencesDesc': 'Configure language and timezone',
     'settings.profileInfo': 'Profile Information',
     'settings.updatePersonalDetails': 'Update your personal details',
     'settings.changeAvatar': 'Change Avatar',
@@ -299,6 +348,9 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.languageDesc': 'Select interface language',
     'settings.spanish': 'Spanish',
     'settings.english': 'English',
+    'settings.timezone': 'Timezone',
+    'settings.timezoneDesc': 'All dates and times will be displayed in this timezone',
+    'settings.selectTimezone': 'Select timezone',
     
     // Agents
     'agents.title': 'AI Agents',
@@ -406,20 +458,76 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     return 'es';
   });
 
+  const [timezone, setTimezoneState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('timezone');
+      return stored || 'America/Argentina/Buenos_Aires';
+    }
+    return 'America/Argentina/Buenos_Aires';
+  });
+
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
 
+  useEffect(() => {
+    localStorage.setItem('timezone', timezone);
+  }, [timezone]);
+
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
+  };
+
+  const setTimezone = (tz: string) => {
+    setTimezoneState(tz);
   };
 
   const t = (key: string): string => {
     return translations[language][key] || key;
   };
 
+  const formatDate = (date: Date | string): string => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return new Intl.DateTimeFormat(language === 'es' ? 'es-AR' : 'en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(d);
+  };
+
+  const formatDateTime = (date: Date | string): string => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return new Intl.DateTimeFormat(language === 'es' ? 'es-AR' : 'en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  };
+
+  const formatTime = (date: Date | string): string => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return new Intl.DateTimeFormat(language === 'es' ? 'es-AR' : 'en-US', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      setLanguage, 
+      timezone, 
+      setTimezone, 
+      t, 
+      formatDate, 
+      formatDateTime, 
+      formatTime 
+    }}>
       {children}
     </LanguageContext.Provider>
   );
