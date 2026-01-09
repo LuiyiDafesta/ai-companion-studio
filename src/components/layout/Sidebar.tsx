@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useProfile } from '@/hooks/useProfile';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -43,11 +45,15 @@ const adminNavItems = [
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { isAdmin, user } = useAuth();
+  const { user } = useAuth();
+  const { data: roleData } = useUserRole();
+  const { data: profile } = useProfile();
   const [collapsed, setCollapsed] = useState(false);
   
+  const isAdmin = roleData?.isAdmin || false;
   const isAdminRoute = location.pathname.startsWith('/admin');
   const navItems = isAdminRoute && isAdmin ? adminNavItems : userNavItems;
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'User';
 
   return (
     <aside className={cn(
@@ -130,11 +136,11 @@ export const Sidebar = () => {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-sm font-medium text-primary">
-                {user.name.charAt(0).toUpperCase()}
+                {displayName.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+              <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
           </div>

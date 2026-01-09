@@ -6,41 +6,18 @@ import { AgentCard } from '@/components/dashboard/AgentCard';
 import { RecentConversations } from '@/components/dashboard/RecentConversations';
 import { UsageChart } from '@/components/dashboard/UsageChart';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-
-const mockAgents = [
-  {
-    id: '1',
-    name: 'Sales Assistant',
-    description: 'Helps qualify leads and answer product questions for potential customers.',
-    status: 'active' as const,
-    objective: 'Sales',
-    conversations: 156,
-    messagesThisMonth: 2340,
-  },
-  {
-    id: '2',
-    name: 'Support Bot',
-    description: 'Handles customer support inquiries and troubleshooting requests 24/7.',
-    status: 'active' as const,
-    objective: 'Support',
-    conversations: 89,
-    messagesThisMonth: 1205,
-  },
-  {
-    id: '3',
-    name: 'FAQ Agent',
-    description: 'Answers frequently asked questions about products and services.',
-    status: 'training' as const,
-    objective: 'Information',
-    conversations: 0,
-    messagesThisMonth: 0,
-  },
-];
+import { useProfile } from '@/hooks/useProfile';
+import { useCredits } from '@/hooks/useCredits';
+import { useAgents } from '@/hooks/useAgents';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { data: profile } = useProfile();
+  const { data: credits } = useCredits();
+  const { data: agents, isLoading: agentsLoading } = useAgents();
+
+  const displayName = profile?.full_name || 'there';
+  const activeAgents = agents?.filter(a => a.status === 'active').length || 0;
 
   return (
     <DashboardLayout>
@@ -49,7 +26,7 @@ export const DashboardPage = () => {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back, {user?.name}! Here's an overview of your AI agents.
+              Welcome back, {displayName}! Here's an overview of your AI agents.
             </p>
           </div>
           <Button onClick={() => navigate('/agents/new')}>
@@ -61,26 +38,23 @@ export const DashboardPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Active Agents"
-            value={2}
+            value={activeAgents}
             icon={<Bot className="w-6 h-6" />}
-            trend={{ value: 50, isPositive: true }}
           />
           <StatsCard
             title="Conversations"
-            value={245}
+            value={0}
             icon={<MessageSquare className="w-6 h-6" />}
-            trend={{ value: 12, isPositive: true }}
           />
           <StatsCard
             title="Credits Remaining"
-            value={user?.credits.toLocaleString() || 0}
+            value={credits?.balance.toLocaleString() || 0}
             icon={<CreditCard className="w-6 h-6" />}
           />
           <StatsCard
             title="Tokens Used"
-            value="45.2K"
+            value={credits?.total_used.toLocaleString() || 0}
             icon={<Zap className="w-6 h-6" />}
-            trend={{ value: 8, isPositive: false }}
           />
         </div>
 
@@ -100,15 +74,37 @@ export const DashboardPage = () => {
               View All
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockAgents.map((agent) => (
-              <AgentCard 
-                key={agent.id} 
-                agent={agent}
-                onEdit={(id) => navigate(`/agents/${id}`)}
-              />
-            ))}
-          </div>
+          {agentsLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading agents...</div>
+          ) : agents && agents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {agents.slice(0, 3).map((agent) => (
+                <AgentCard 
+                  key={agent.id} 
+                  agent={{
+                    id: agent.id,
+                    name: agent.name,
+                    description: agent.description || '',
+                    status: agent.status === 'draft' ? 'training' : agent.status,
+                    objective: agent.objective.charAt(0).toUpperCase() + agent.objective.slice(1),
+                    conversations: 0,
+                    messagesThisMonth: 0,
+                  }}
+                  onEdit={(id) => navigate(`/agents/${id}`)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 border border-dashed border-border rounded-lg">
+              <Bot className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-foreground font-medium">No agents yet</p>
+              <p className="text-sm text-muted-foreground mb-4">Create your first AI agent to get started</p>
+              <Button onClick={() => navigate('/agents/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Agent
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

@@ -13,32 +13,44 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  if (isAuthenticated) {
+    navigate('/dashboard');
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    try {
-      const success = await login(email, password);
-      if (success) {
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in.",
-        });
-        navigate('/dashboard');
+    const { error } = await login(email, password);
+    
+    if (error) {
+      let message = 'Invalid credentials. Please try again.';
+      if (error.message.includes('Invalid login credentials')) {
+        message = 'Invalid email or password.';
+      } else if (error.message.includes('Email not confirmed')) {
+        message = 'Please confirm your email before logging in.';
       }
-    } catch {
+      
       toast({
-        title: "Error",
-        description: "Invalid credentials. Please try again.",
+        title: "Login failed",
+        description: message,
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully logged in.",
+      });
+      navigate('/dashboard');
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -115,10 +127,6 @@ export const LoginPage = () => {
             </div>
           </CardContent>
         </Card>
-
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Hint: Use "admin@example.com" to access admin panel
-        </p>
       </div>
     </div>
   );

@@ -12,16 +12,22 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { useCredits } from '@/hooks/useCredits';
+import { useProfile } from '@/hooks/useProfile';
 
 export const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { data: credits } = useCredits();
+  const { data: profile } = useProfile();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
+
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'User';
 
   return (
     <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
@@ -36,10 +42,10 @@ export const Header = () => {
       </div>
 
       <div className="flex items-center gap-3">
-        {user && (
+        {credits && (
           <Badge variant="outline" className="gap-1.5 py-1.5">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            {user.credits.toLocaleString()} credits
+            {credits.balance.toLocaleString()} credits
           </Badge>
         )}
 
@@ -57,7 +63,7 @@ export const Header = () => {
             <Button variant="ghost" size="icon" className="rounded-full">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-sm font-medium text-primary">
-                  {user?.name.charAt(0).toUpperCase()}
+                  {displayName.charAt(0).toUpperCase()}
                 </span>
               </div>
             </Button>

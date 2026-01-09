@@ -10,16 +10,22 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export const RegisterPage = () => {
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  if (isAuthenticated) {
+    navigate('/dashboard');
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,26 +39,41 @@ export const RegisterPage = () => {
       return;
     }
 
-    setIsLoading(true);
-    
-    try {
-      const success = await register(email, password, name);
-      if (success) {
-        toast({
-          title: "Account created!",
-          description: "Welcome to AgentHub. Let's get started!",
-        });
-        navigate('/dashboard');
-      }
-    } catch {
+    if (password.length < 8) {
       toast({
-        title: "Error",
-        description: "Failed to create account. Please try again.",
+        title: "Password too short",
+        description: "Password must be at least 8 characters.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    setIsLoading(true);
+    
+    const { error } = await register(email, password, fullName, company || undefined);
+    
+    if (error) {
+      let message = 'Failed to create account. Please try again.';
+      if (error.message.includes('already registered')) {
+        message = 'This email is already registered. Try logging in instead.';
+      } else if (error.message.includes('password')) {
+        message = 'Password must be at least 8 characters.';
+      }
+      
+      toast({
+        title: "Registration failed",
+        description: message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Account created!",
+        description: "Welcome to AgentHub. You've received 1000 free credits!",
+      });
+      navigate('/dashboard');
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -75,13 +96,13 @@ export const RegisterPage = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input
-                  id="name"
+                  id="fullName"
                   type="text"
                   placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   required
                 />
               </div>

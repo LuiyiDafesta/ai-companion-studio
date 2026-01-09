@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/hooks/useCredits';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 
@@ -59,10 +59,10 @@ const plans = [
 ];
 
 export const BillingPage = () => {
-  const { user } = useAuth();
-  const usedCredits = 3200;
-  const totalCredits = 5000;
-  const usagePercentage = (usedCredits / totalCredits) * 100;
+  const { data: credits } = useCredits();
+  const usedCredits = credits?.total_used || 0;
+  const totalCredits = (credits?.balance || 0) + usedCredits;
+  const usagePercentage = totalCredits > 0 ? (usedCredits / totalCredits) * 100 : 0;
 
   return (
     <DashboardLayout>
@@ -83,7 +83,7 @@ export const BillingPage = () => {
               </div>
               <Badge variant="outline" className="gap-1.5 py-1.5">
                 <Zap className="w-3 h-3" />
-                {user?.credits.toLocaleString()} remaining
+                {credits?.balance.toLocaleString() || 0} remaining
               </Badge>
             </div>
           </CardHeader>
@@ -98,7 +98,7 @@ export const BillingPage = () => {
               <Progress value={usagePercentage} className="h-2" />
             </div>
             <p className="text-sm text-muted-foreground">
-              Resets on February 1, 2026 • 23 days remaining
+              Credits reset with your billing cycle
             </p>
           </CardContent>
         </Card>

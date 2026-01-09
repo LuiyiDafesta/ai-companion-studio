@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   User, 
   Building, 
-  CreditCard, 
   Bell, 
   Shield, 
   Trash2,
@@ -17,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -32,17 +32,36 @@ import {
 
 export const SettingsPage = () => {
   const { user } = useAuth();
+  const { data: profile, isLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
   const { toast } = useToast();
-  const [profile, setProfile] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    company: user?.company || '',
+
+  const [formData, setFormData] = useState({
+    full_name: '',
+    email: '',
+    company_name: '',
+    company_website: '',
+    phone: '',
   });
 
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || '',
+        email: profile.email || '',
+        company_name: profile.company_name || '',
+        company_website: profile.company_website || '',
+        phone: profile.phone || '',
+      });
+    }
+  }, [profile]);
+
   const handleSaveProfile = () => {
-    toast({
-      title: "Profile updated",
-      description: "Your changes have been saved.",
+    updateProfile.mutate({
+      full_name: formData.full_name,
+      company_name: formData.company_name,
+      company_website: formData.company_website,
+      phone: formData.phone,
     });
   };
 
@@ -52,6 +71,16 @@ export const SettingsPage = () => {
       description: "Your data export will be ready shortly.",
     });
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -93,18 +122,18 @@ export const SettingsPage = () => {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
                     <span className="text-2xl font-semibold text-primary">
-                      {profile.name.charAt(0).toUpperCase()}
+                      {(formData.full_name || 'U').charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <Button variant="outline">Change Avatar</Button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="full_name">Full Name</Label>
                     <Input
-                      id="name"
-                      value={profile.name}
-                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      id="full_name"
+                      value={formData.full_name}
+                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -112,14 +141,24 @@ export const SettingsPage = () => {
                     <Input
                       id="email"
                       type="email"
-                      value={profile.email}
-                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                      value={formData.email}
+                      disabled
+                      className="bg-muted/30"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="+1 (555) 000-0000"
                     />
                   </div>
                 </div>
-                <Button onClick={handleSaveProfile}>
+                <Button onClick={handleSaveProfile} disabled={updateProfile.isPending}>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                  {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
               </CardContent>
             </Card>
@@ -133,30 +172,25 @@ export const SettingsPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company Name</Label>
+                  <Label htmlFor="company_name">Company Name</Label>
                   <Input
-                    id="company"
-                    value={profile.company}
-                    onChange={(e) => setProfile({ ...profile, company: e.target.value })}
+                    id="company_name"
+                    value={formData.company_name}
+                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="company_website">Website</Label>
                   <Input
-                    id="website"
+                    id="company_website"
+                    value={formData.company_website}
+                    onChange={(e) => setFormData({ ...formData, company_website: e.target.value })}
                     placeholder="https://yourcompany.com"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="industry">Industry</Label>
-                  <Input
-                    id="industry"
-                    placeholder="Technology, Healthcare, etc."
-                  />
-                </div>
-                <Button onClick={handleSaveProfile}>
+                <Button onClick={handleSaveProfile} disabled={updateProfile.isPending}>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                  {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
               </CardContent>
             </Card>
