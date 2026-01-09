@@ -81,15 +81,7 @@ export const DashboardPage = () => {
               {agents.slice(0, 3).map((agent) => (
                 <AgentCard 
                   key={agent.id} 
-                  agent={{
-                    id: agent.id,
-                    name: agent.name,
-                    description: agent.description || '',
-                    status: agent.status === 'draft' ? 'training' : agent.status,
-                    objective: agent.objective.charAt(0).toUpperCase() + agent.objective.slice(1),
-                    conversations: 0,
-                    messagesThisMonth: 0,
-                  }}
+                  agent={agent}
                   onEdit={(id) => navigate(`/agents/${id}`)}
                 />
               ))}

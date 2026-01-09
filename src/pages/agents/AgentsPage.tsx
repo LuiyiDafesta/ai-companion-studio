@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Plus, Search, Filter, Grid, List } from 'lucide-react';
+import { Plus, Search, Filter, Grid, List, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AgentCard } from '@/components/dashboard/AgentCard';
 import { useNavigate } from 'react-router-dom';
+import { useAgents, useUpdateAgent, useDeleteAgent } from '@/hooks/useAgents';
+import { AgentStatus } from '@/types/database';
 import {
   Select,
   SelectContent,
@@ -12,58 +14,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const mockAgents = [
-  {
-    id: '1',
-    name: 'Sales Assistant',
-    description: 'Helps qualify leads and answer product questions for potential customers.',
-    status: 'active' as const,
-    objective: 'Sales',
-    conversations: 156,
-    messagesThisMonth: 2340,
-  },
-  {
-    id: '2',
-    name: 'Support Bot',
-    description: 'Handles customer support inquiries and troubleshooting requests 24/7.',
-    status: 'active' as const,
-    objective: 'Support',
-    conversations: 89,
-    messagesThisMonth: 1205,
-  },
-  {
-    id: '3',
-    name: 'FAQ Agent',
-    description: 'Answers frequently asked questions about products and services.',
-    status: 'training' as const,
-    objective: 'Information',
-    conversations: 0,
-    messagesThisMonth: 0,
-  },
-  {
-    id: '4',
-    name: 'Lead Capture Bot',
-    description: 'Captures visitor information and qualifies leads for the sales team.',
-    status: 'paused' as const,
-    objective: 'Sales',
-    conversations: 45,
-    messagesThisMonth: 320,
-  },
-];
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const AgentsPage = () => {
   const navigate = useNavigate();
+  const { data: agents, isLoading } = useAgents();
+  const updateAgent = useUpdateAgent();
+  const deleteAgent = useDeleteAgent();
+  
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<string | null>(null);
 
-  const filteredAgents = mockAgents.filter(agent => {
+  const filteredAgents = agents?.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase()) ||
-                          agent.description.toLowerCase().includes(search.toLowerCase());
+                          (agent.description?.toLowerCase() || '').includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || agent.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) || [];
+
+  const handleToggleStatus = (id: string) => {
+    const agent = agents?.find(a => a.id === id);
+    if (!agent) return;
+    
+    let newStatus: AgentStatus;
+    if (agent.status === 'active') {
+      newStatus = 'paused';
+    } else if (agent.status === 'archived') {
+      newStatus = 'draft';
+    } else {
+      newStatus = 'active';
+    }
+    
+    updateAgent.mutate({ id, data: { status: newStatus } });
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setAgentToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (agentToDelete) {
+      deleteAgent.mutate(agentToDelete);
+      setDeleteDialogOpen(false);
+      setAgentToDelete(null);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -101,7 +109,8 @@ export const AgentsPage = () => {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="paused">Paused</SelectItem>
-                <SelectItem value="training">Training</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex border border-border rounded-lg">
@@ -123,18 +132,34 @@ export const AgentsPage = () => {
           </div>
         </div>
 
-        {filteredAgents.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : filteredAgents.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">No agents found</h3>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              {agents?.length === 0 ? 'No agents yet' : 'No agents found'}
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Try adjusting your search or filter criteria
+              {agents?.length === 0 
+                ? 'Create your first AI agent to get started'
+                : 'Try adjusting your search or filter criteria'
+              }
             </p>
-            <Button variant="outline" onClick={() => { setSearch(''); setStatusFilter('all'); }}>
-              Clear filters
-            </Button>
+            {agents?.length === 0 ? (
+              <Button onClick={() => navigate('/agents/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Agent
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => { setSearch(''); setStatusFilter('all'); }}>
+                Clear filters
+              </Button>
+            )}
           </div>
         ) : (
           <div className={viewMode === 'grid' 
@@ -146,11 +171,31 @@ export const AgentsPage = () => {
                 key={agent.id} 
                 agent={agent}
                 onEdit={(id) => navigate(`/agents/${id}`)}
+                onToggleStatus={handleToggleStatus}
+                onDelete={handleDeleteClick}
               />
             ))}
           </div>
         )}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the agent
+              and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

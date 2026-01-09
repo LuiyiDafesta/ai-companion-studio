@@ -8,7 +8,8 @@ import {
   Sparkles, 
   FileText,
   MessageSquare,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { useCreateAgent } from '@/hooks/useAgents';
+import { AgentObjective } from '@/types/database';
 
 const steps = [
   { id: 1, title: 'Basic Info', icon: Bot },
@@ -28,7 +30,7 @@ const steps = [
   { id: 5, title: 'Review', icon: Check },
 ];
 
-const objectives = [
+const objectives: { value: AgentObjective; label: string; description: string }[] = [
   { value: 'sales', label: 'Sales', description: 'Qualify leads and convert visitors into customers' },
   { value: 'support', label: 'Customer Support', description: 'Help customers resolve issues and answer questions' },
   { value: 'information', label: 'Information', description: 'Provide information about products or services' },
@@ -43,12 +45,12 @@ const tones = [
 
 export const CreateAgentPage = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const createAgent = useCreateAgent();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    objective: '',
+    objective: '' as AgentObjective | '',
     tone: '',
     instructions: '',
   });
@@ -79,12 +81,21 @@ export const CreateAgentPage = () => {
     }
   };
 
-  const handleCreate = () => {
-    toast({
-      title: "Agent created!",
-      description: `${formData.name} is now being trained with your documents.`,
-    });
-    navigate('/agents');
+  const handleCreate = async () => {
+    if (!formData.objective) return;
+    
+    try {
+      await createAgent.mutateAsync({
+        name: formData.name,
+        description: formData.description,
+        objective: formData.objective as AgentObjective,
+        tone: formData.tone,
+        system_prompt: formData.instructions,
+      });
+      navigate('/agents');
+    } catch (error) {
+      // Error is handled by the mutation
+    }
   };
 
   return (
@@ -283,8 +294,12 @@ Example: 'You are a helpful sales assistant for our software company. You should
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
-                <Button onClick={handleCreate}>
-                  <Check className="w-4 h-4 mr-2" />
+                <Button onClick={handleCreate} disabled={createAgent.isPending}>
+                  {createAgent.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4 mr-2" />
+                  )}
                   Create Agent
                 </Button>
               )}
