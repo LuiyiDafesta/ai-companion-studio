@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useCredits } from '@/hooks/useCredits';
@@ -18,6 +19,7 @@ import { useProfile } from '@/hooks/useProfile';
 export const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { data: credits } = useCredits();
   const { data: profile } = useProfile();
@@ -35,7 +37,7 @@ export const Header = () => {
         <div className="relative max-w-md w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="Search agents, documents..." 
+            placeholder={t('header.search')} 
             className="pl-10 bg-background"
           />
         </div>
@@ -45,7 +47,7 @@ export const Header = () => {
         {credits && (
           <Badge variant="outline" className="gap-1.5 py-1.5">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            {credits.balance.toLocaleString()} credits
+            {credits.balance.toLocaleString()} {t('header.credits')}
           </Badge>
         )}
 
@@ -71,12 +73,12 @@ export const Header = () => {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => navigate('/settings')}>
               <User className="w-4 h-4 mr-2" />
-              Profile
+              {t('header.profile')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              {t('header.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
