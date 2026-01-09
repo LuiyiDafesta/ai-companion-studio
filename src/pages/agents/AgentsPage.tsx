@@ -6,6 +6,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AgentCard } from '@/components/dashboard/AgentCard';
 import { useNavigate } from 'react-router-dom';
 import { useAgents, useUpdateAgent, useDeleteAgent } from '@/hooks/useAgents';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AgentStatus } from '@/types/database';
 import {
   Select,
@@ -30,6 +31,7 @@ export const AgentsPage = () => {
   const { data: agents, isLoading } = useAgents();
   const updateAgent = useUpdateAgent();
   const deleteAgent = useDeleteAgent();
+  const { t } = useLanguage();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [search, setSearch] = useState('');
@@ -78,14 +80,14 @@ export const AgentsPage = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">AI Agents</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('agents.title')}</h1>
             <p className="text-muted-foreground">
-              Create and manage your conversational AI agents
+              {t('agents.subtitle')}
             </p>
           </div>
           <Button onClick={() => navigate('/agents/new')}>
             <Plus className="w-4 h-4 mr-2" />
-            Create Agent
+            {t('dashboard.createAgent')}
           </Button>
         </div>
 
@@ -93,7 +95,7 @@ export const AgentsPage = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Search agents..." 
+              placeholder={t('agents.search')} 
               className="pl-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -103,14 +105,13 @@ export const AgentsPage = () => {
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[140px]">
                 <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t('common.status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value="all">{t('agents.all')}</SelectItem>
+                <SelectItem value="active">{t('agents.active')}</SelectItem>
+                <SelectItem value="paused">{t('agents.paused')}</SelectItem>
+                <SelectItem value="draft">{t('agents.draft')}</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex border border-border rounded-lg">
@@ -142,22 +143,15 @@ export const AgentsPage = () => {
               <Search className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {agents?.length === 0 ? 'No agents yet' : 'No agents found'}
+              {t('agents.noAgentsFound')}
             </h3>
             <p className="text-muted-foreground mb-4">
-              {agents?.length === 0 
-                ? 'Create your first AI agent to get started'
-                : 'Try adjusting your search or filter criteria'
-              }
+              {t('agents.trySearchOrCreate')}
             </p>
-            {agents?.length === 0 ? (
+            {agents?.length === 0 && (
               <Button onClick={() => navigate('/agents/new')}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Agent
-              </Button>
-            ) : (
-              <Button variant="outline" onClick={() => { setSearch(''); setStatusFilter('all'); }}>
-                Clear filters
+                {t('dashboard.createAgent')}
               </Button>
             )}
           </div>
@@ -182,16 +176,15 @@ export const AgentsPage = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t('agents.deleteConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the agent
-              and all associated data.
+              {t('agents.deleteConfirmDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('settings.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t('agents.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

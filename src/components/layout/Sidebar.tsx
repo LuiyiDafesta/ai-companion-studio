@@ -19,36 +19,38 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfile } from '@/hooks/useProfile';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-
-const userNavItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-  { icon: Bot, label: 'AI Agents', path: '/agents' },
-  { icon: FileText, label: 'Documents', path: '/documents' },
-  { icon: MessageSquare, label: 'Conversations', path: '/conversations' },
-  { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-  { icon: CreditCard, label: 'Billing', path: '/billing' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
-];
-
-const adminNavItems = [
-  { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
-  { icon: Users, label: 'Users', path: '/admin/users' },
-  { icon: Bot, label: 'All Agents', path: '/admin/agents' },
-  { icon: BarChart3, label: 'Metrics', path: '/admin/metrics' },
-  { icon: Webhook, label: 'Integrations', path: '/admin/integrations' },
-  { icon: Database, label: 'AI Config', path: '/admin/ai-config' },
-  { icon: Shield, label: 'Security', path: '/admin/security' },
-  { icon: AlertTriangle, label: 'Danger Zone', path: '/admin/danger' },
-];
 
 export const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { data: roleData } = useUserRole();
   const { data: profile } = useProfile();
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
+
+  const userNavItems = [
+    { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
+    { icon: Bot, label: t('nav.agents'), path: '/agents' },
+    { icon: FileText, label: t('nav.documents'), path: '/documents' },
+    { icon: MessageSquare, label: t('nav.conversations'), path: '/conversations' },
+    { icon: BarChart3, label: t('nav.analytics'), path: '/analytics' },
+    { icon: CreditCard, label: t('nav.billing'), path: '/billing' },
+    { icon: Settings, label: t('nav.settings'), path: '/settings' },
+  ];
+
+  const adminNavItems = [
+    { icon: LayoutDashboard, label: t('nav.admin.overview'), path: '/admin' },
+    { icon: Users, label: t('nav.admin.users'), path: '/admin/users' },
+    { icon: Bot, label: t('nav.admin.allAgents'), path: '/admin/agents' },
+    { icon: BarChart3, label: t('nav.admin.metrics'), path: '/admin/metrics' },
+    { icon: Webhook, label: t('nav.admin.integrations'), path: '/admin/integrations' },
+    { icon: Database, label: t('nav.admin.aiConfig'), path: '/admin/ai-config' },
+    { icon: Shield, label: t('nav.admin.security'), path: '/admin/security' },
+    { icon: AlertTriangle, label: t('nav.admin.dangerZone'), path: '/admin/danger' },
+  ];
   
   const isAdmin = roleData?.isAdmin || false;
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -94,7 +96,7 @@ export const Sidebar = () => {
                 !isAdminRoute ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              User
+              {t('nav.user')}
             </Link>
             <Link 
               to="/admin" 
@@ -103,7 +105,7 @@ export const Sidebar = () => {
                 isAdminRoute ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              Admin
+              {t('nav.admin')}
             </Link>
           </div>
         </div>

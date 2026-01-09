@@ -4,73 +4,75 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCredits } from '@/hooks/useCredits';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 
-const plans = [
-  {
-    name: 'Starter',
-    price: '$29',
-    period: '/month',
-    description: 'Perfect for small businesses',
-    credits: 5000,
-    features: [
-      '2 AI Agents',
-      '5,000 credits/month',
-      'Web chat widget',
-      'Email support',
-    ],
-    current: false,
-  },
-  {
-    name: 'Professional',
-    price: '$99',
-    period: '/month',
-    description: 'For growing teams',
-    credits: 25000,
-    features: [
-      '10 AI Agents',
-      '25,000 credits/month',
-      'Web chat + WhatsApp',
-      'Document uploads',
-      'Priority support',
-      'Analytics dashboard',
-    ],
-    current: true,
-    popular: true,
-  },
-  {
-    name: 'Enterprise',
-    price: '$299',
-    period: '/month',
-    description: 'For large organizations',
-    credits: 100000,
-    features: [
-      'Unlimited AI Agents',
-      '100,000 credits/month',
-      'All channels',
-      'Custom integrations',
-      'Dedicated support',
-      'SLA guarantee',
-      'Custom training',
-    ],
-    current: false,
-  },
-];
-
 export const BillingPage = () => {
   const { data: credits } = useCredits();
+  const { t } = useLanguage();
   const usedCredits = credits?.total_used || 0;
   const totalCredits = (credits?.balance || 0) + usedCredits;
   const usagePercentage = totalCredits > 0 ? (usedCredits / totalCredits) * 100 : 0;
+
+  const plans = [
+    {
+      name: 'Starter',
+      price: '$29',
+      period: '/mes',
+      description: 'Perfecto para pequeños negocios',
+      credits: 5000,
+      features: [
+        '2 Agentes IA',
+        '5,000 créditos/mes',
+        'Widget de chat web',
+        'Soporte por email',
+      ],
+      current: false,
+    },
+    {
+      name: 'Professional',
+      price: '$99',
+      period: '/mes',
+      description: 'Para equipos en crecimiento',
+      credits: 25000,
+      features: [
+        '10 Agentes IA',
+        '25,000 créditos/mes',
+        'Chat web + WhatsApp',
+        'Carga de documentos',
+        'Soporte prioritario',
+        'Panel de analíticas',
+      ],
+      current: true,
+      popular: true,
+    },
+    {
+      name: 'Enterprise',
+      price: '$299',
+      period: '/mes',
+      description: 'Para grandes organizaciones',
+      credits: 100000,
+      features: [
+        'Agentes IA ilimitados',
+        '100,000 créditos/mes',
+        'Todos los canales',
+        'Integraciones personalizadas',
+        'Soporte dedicado',
+        'Garantía SLA',
+        'Entrenamiento personalizado',
+      ],
+      current: false,
+    },
+  ];
 
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Billing & Subscription</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('billing.title')}</h1>
           <p className="text-muted-foreground">
-            Manage your subscription and payment methods
+            {t('billing.subtitle')}
           </p>
         </div>
 
@@ -78,19 +80,19 @@ export const BillingPage = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Current Usage</CardTitle>
-                <CardDescription>Your credit consumption this billing period</CardDescription>
+                <CardTitle>Uso Actual</CardTitle>
+                <CardDescription>Tu consumo de créditos en este período de facturación</CardDescription>
               </div>
               <Badge variant="outline" className="gap-1.5 py-1.5">
                 <Zap className="w-3 h-3" />
-                {credits?.balance.toLocaleString() || 0} remaining
+                {credits?.balance.toLocaleString() || 0} restantes
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Credits used</span>
+                <span className="text-muted-foreground">Créditos usados</span>
                 <span className="font-medium text-foreground">
                   {usedCredits.toLocaleString()} / {totalCredits.toLocaleString()}
                 </span>
@@ -98,13 +100,13 @@ export const BillingPage = () => {
               <Progress value={usagePercentage} className="h-2" />
             </div>
             <p className="text-sm text-muted-foreground">
-              Credits reset with your billing cycle
+              Los créditos se reinician con tu ciclo de facturación
             </p>
           </CardContent>
         </Card>
 
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Choose Your Plan</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Elige Tu Plan</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => (
               <Card 
@@ -116,7 +118,7 @@ export const BillingPage = () => {
               >
                 {plan.popular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    Most Popular
+                    Más Popular
                   </Badge>
                 )}
                 <CardHeader>
@@ -141,7 +143,7 @@ export const BillingPage = () => {
                     variant={plan.current ? "outline" : plan.popular ? "default" : "secondary"}
                     disabled={plan.current}
                   >
-                    {plan.current ? 'Current Plan' : 'Upgrade'}
+                    {plan.current ? 'Plan Actual' : 'Mejorar'}
                   </Button>
                 </CardContent>
               </Card>
@@ -151,8 +153,8 @@ export const BillingPage = () => {
 
         <Card className="bg-card">
           <CardHeader>
-            <CardTitle>Payment Method</CardTitle>
-            <CardDescription>Manage your payment information</CardDescription>
+            <CardTitle>Método de Pago</CardTitle>
+            <CardDescription>Gestiona tu información de pago</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between p-4 rounded-lg border border-border">
@@ -162,12 +164,12 @@ export const BillingPage = () => {
                 </div>
                 <div>
                   <p className="font-medium text-foreground">•••• •••• •••• 4242</p>
-                  <p className="text-sm text-muted-foreground">Expires 12/2027</p>
+                  <p className="text-sm text-muted-foreground">Expira 12/2027</p>
                 </div>
               </div>
-              <Button variant="outline">Update</Button>
+              <Button variant="outline">Actualizar</Button>
             </div>
-            <Button variant="ghost">+ Add payment method</Button>
+            <Button variant="ghost">+ Añadir método de pago</Button>
           </CardContent>
         </Card>
       </div>

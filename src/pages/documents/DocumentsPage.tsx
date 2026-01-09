@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useDocuments, useCreateDocument, useDeleteDocument, useRetryDocument } from '@/hooks/useDocuments';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { DocumentStatus, DocumentType } from '@/types/database';
 
 const statusConfig: Record<DocumentStatus, { icon: typeof Clock; color: string; bg: string }> = {
@@ -23,6 +24,7 @@ export const DocumentsPage = () => {
   const createDocument = useCreateDocument();
   const deleteDocument = useDeleteDocument();
   const retryDocument = useRetryDocument();
+  const { t } = useLanguage();
   const [urlInput, setUrlInput] = useState('');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +40,6 @@ export const DocumentsPage = () => {
       });
     });
     
-    // Reset the input
     e.target.value = '';
   };
 
@@ -70,22 +71,32 @@ export const DocumentsPage = () => {
 
   const indexedCount = documents?.filter(d => d.status === 'indexed').length || 0;
 
+  const getStatusLabel = (status: DocumentStatus) => {
+    const labels: Record<DocumentStatus, string> = {
+      pending: t('documents.pending'),
+      processing: t('documents.processing'),
+      indexed: t('documents.indexed'),
+      failed: t('documents.failed'),
+    };
+    return labels[status];
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Documents</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('documents.title')}</h1>
           <p className="text-muted-foreground">
-            Upload documents to train your AI agents with your knowledge base
+            {t('documents.subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-card">
             <CardHeader>
-              <CardTitle className="text-lg">Upload Files</CardTitle>
+              <CardTitle className="text-lg">{t('documents.uploadFile')}</CardTitle>
               <CardDescription>
-                Drag and drop or click to upload PDFs and text files
+                Arrastra y suelta o haz clic para subir PDFs y archivos de texto
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -93,10 +104,10 @@ export const DocumentsPage = () => {
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-10 h-10 text-muted-foreground mb-3" />
                   <p className="mb-2 text-sm text-foreground">
-                    <span className="font-semibold">Click to upload</span> or drag and drop
+                    <span className="font-semibold">Haz clic para subir</span> o arrastra y suelta
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    PDF, TXT (MAX 10MB each)
+                    PDF, TXT (MÁX 10MB cada uno)
                   </p>
                 </div>
                 <input 
@@ -112,21 +123,21 @@ export const DocumentsPage = () => {
 
           <Card className="bg-card">
             <CardHeader>
-              <CardTitle className="text-lg">Add Website URL</CardTitle>
+              <CardTitle className="text-lg">{t('documents.addUrl')}</CardTitle>
               <CardDescription>
-                We'll crawl and index the content from web pages
+                Rastrearemos e indexaremos el contenido de las páginas web
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="url">Website URL</Label>
+                  <Label htmlFor="url">URL del sitio web</Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="url"
-                        placeholder="https://example.com/docs"
+                        placeholder="https://ejemplo.com/docs"
                         className="pl-10"
                         value={urlInput}
                         onChange={(e) => setUrlInput(e.target.value)}
@@ -134,12 +145,12 @@ export const DocumentsPage = () => {
                       />
                     </div>
                     <Button onClick={handleUrlAdd} disabled={createDocument.isPending}>
-                      {createDocument.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add'}
+                      {createDocument.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Añadir'}
                     </Button>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  We'll extract text content from the page and any linked pages
+                  Extraeremos el contenido de texto de la página y cualquier página enlazada
                 </p>
               </div>
             </CardContent>
@@ -148,9 +159,9 @@ export const DocumentsPage = () => {
 
         <Card className="bg-card">
           <CardHeader>
-            <CardTitle className="text-lg">Your Documents</CardTitle>
+            <CardTitle className="text-lg">Tus Documentos</CardTitle>
             <CardDescription>
-              {documents?.length || 0} documents • {indexedCount} indexed
+              {documents?.length || 0} documentos • {indexedCount} indexados
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -161,9 +172,9 @@ export const DocumentsPage = () => {
             ) : !documents || documents.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-foreground font-medium">No documents yet</p>
+                <p className="text-foreground font-medium">{t('documents.noDocuments')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Upload files or add URLs to get started
+                  {t('documents.uploadFirst')}
                 </p>
               </div>
             ) : (
@@ -212,7 +223,7 @@ export const DocumentsPage = () => {
                         className={cn("capitalize", statusConfig[doc.status].bg, statusConfig[doc.status].color)}
                       >
                         <StatusIcon className="w-3 h-3 mr-1" />
-                        {doc.status}
+                        {getStatusLabel(doc.status)}
                       </Badge>
 
                       <div className="flex items-center gap-1">

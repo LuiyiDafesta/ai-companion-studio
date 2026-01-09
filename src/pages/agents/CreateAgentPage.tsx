@@ -20,32 +20,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { cn } from '@/lib/utils';
 import { useCreateAgent } from '@/hooks/useAgents';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AgentObjective } from '@/types/database';
-
-const steps = [
-  { id: 1, title: 'Basic Info', icon: Bot },
-  { id: 2, title: 'Objective', icon: Target },
-  { id: 3, title: 'Personality', icon: Sparkles },
-  { id: 4, title: 'Instructions', icon: FileText },
-  { id: 5, title: 'Review', icon: Check },
-];
-
-const objectives: { value: AgentObjective; label: string; description: string }[] = [
-  { value: 'sales', label: 'Sales', description: 'Qualify leads and convert visitors into customers' },
-  { value: 'support', label: 'Customer Support', description: 'Help customers resolve issues and answer questions' },
-  { value: 'information', label: 'Information', description: 'Provide information about products or services' },
-];
-
-const tones = [
-  { value: 'professional', label: 'Professional', description: 'Formal and business-like communication' },
-  { value: 'friendly', label: 'Friendly', description: 'Warm and approachable conversation style' },
-  { value: 'casual', label: 'Casual', description: 'Relaxed and informal tone' },
-  { value: 'enthusiastic', label: 'Enthusiastic', description: 'Energetic and excited communication' },
-];
 
 export const CreateAgentPage = () => {
   const navigate = useNavigate();
   const createAgent = useCreateAgent();
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -54,6 +35,27 @@ export const CreateAgentPage = () => {
     tone: '',
     instructions: '',
   });
+
+  const steps = [
+    { id: 1, title: t('createAgent.basicInfo'), icon: Bot },
+    { id: 2, title: t('createAgent.objective'), icon: Target },
+    { id: 3, title: t('createAgent.personality'), icon: Sparkles },
+    { id: 4, title: t('createAgent.systemPrompt'), icon: FileText },
+    { id: 5, title: 'Review', icon: Check },
+  ];
+
+  const objectives: { value: AgentObjective; label: string; description: string }[] = [
+    { value: 'sales', label: t('createAgent.sales'), description: t('createAgent.salesDesc') || 'Qualify leads and convert visitors into customers' },
+    { value: 'support', label: t('createAgent.support'), description: t('createAgent.supportDesc') || 'Help customers resolve issues and answer questions' },
+    { value: 'information', label: t('createAgent.information'), description: t('createAgent.infoDesc') || 'Provide information about products or services' },
+  ];
+
+  const tones = [
+    { value: 'professional', label: 'Profesional', description: 'Comunicación formal y empresarial' },
+    { value: 'friendly', label: 'Amigable', description: 'Estilo de conversación cálido y accesible' },
+    { value: 'casual', label: 'Casual', description: 'Tono relajado e informal' },
+    { value: 'enthusiastic', label: 'Entusiasta', description: 'Comunicación enérgica y emocionada' },
+  ];
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -104,11 +106,11 @@ export const CreateAgentPage = () => {
         <div className="mb-8">
           <Button variant="ghost" onClick={() => navigate('/agents')} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Agents
+            {t('createAgent.back')}
           </Button>
-          <h1 className="text-2xl font-bold text-foreground">Create New Agent</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('createAgent.title')}</h1>
           <p className="text-muted-foreground">
-            Set up your AI agent in a few simple steps
+            {t('createAgent.subtitle')}
           </p>
         </div>
 
@@ -144,30 +146,30 @@ export const CreateAgentPage = () => {
           <CardHeader>
             <CardTitle>{steps[currentStep - 1].title}</CardTitle>
             <CardDescription>
-              {currentStep === 1 && "Give your agent a name and description"}
-              {currentStep === 2 && "What should your agent help with?"}
-              {currentStep === 3 && "How should your agent communicate?"}
-              {currentStep === 4 && "Describe what your agent should do"}
-              {currentStep === 5 && "Review your agent configuration"}
+              {currentStep === 1 && t('createAgent.basicInfoDesc')}
+              {currentStep === 2 && t('createAgent.selectObjective')}
+              {currentStep === 3 && t('createAgent.personalityDesc')}
+              {currentStep === 4 && t('createAgent.systemPromptPlaceholder')}
+              {currentStep === 5 && 'Revisa la configuración de tu agente'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {currentStep === 1 && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="name">Agent Name</Label>
+                  <Label htmlFor="name">{t('createAgent.agentName')}</Label>
                   <Input
                     id="name"
-                    placeholder="e.g., Sales Assistant"
+                    placeholder={t('createAgent.agentNamePlaceholder')}
                     value={formData.name}
                     onChange={(e) => updateFormData('name', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t('createAgent.description')}</Label>
                   <Textarea
                     id="description"
-                    placeholder="Briefly describe what this agent will do..."
+                    placeholder={t('createAgent.descriptionPlaceholder')}
                     value={formData.description}
                     onChange={(e) => updateFormData('description', e.target.value)}
                     rows={3}
@@ -230,19 +232,14 @@ export const CreateAgentPage = () => {
 
             {currentStep === 4 && (
               <div className="space-y-2">
-                <Label htmlFor="instructions">Natural Language Instructions</Label>
+                <Label htmlFor="instructions">{t('createAgent.systemPrompt')}</Label>
                 <Textarea
                   id="instructions"
-                  placeholder="Describe in natural language how your agent should behave, what it should know, and how it should interact with users...
-
-Example: 'You are a helpful sales assistant for our software company. You should be knowledgeable about our product features, pricing plans, and be able to schedule demos. Always be polite and try to understand the customer's needs before recommending solutions.'"
+                  placeholder={t('createAgent.systemPromptPlaceholder')}
                   value={formData.instructions}
                   onChange={(e) => updateFormData('instructions', e.target.value)}
                   rows={8}
                 />
-                <p className="text-xs text-muted-foreground">
-                  This will be transformed into a professional AI prompt for your agent
-                </p>
               </div>
             )}
 
@@ -250,30 +247,30 @@ Example: 'You are a helpful sales assistant for our software company. You should
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/30 space-y-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="text-sm text-muted-foreground">{t('createAgent.agentName')}</p>
                     <p className="font-medium text-foreground">{formData.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Description</p>
+                    <p className="text-sm text-muted-foreground">{t('createAgent.description')}</p>
                     <p className="font-medium text-foreground">{formData.description}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Objective</p>
+                    <p className="text-sm text-muted-foreground">{t('createAgent.objective')}</p>
                     <p className="font-medium text-foreground capitalize">{formData.objective}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Tone</p>
+                    <p className="text-sm text-muted-foreground">{t('createAgent.tone')}</p>
                     <p className="font-medium text-foreground capitalize">{formData.tone}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Instructions</p>
+                    <p className="text-sm text-muted-foreground">{t('createAgent.systemPrompt')}</p>
                     <p className="font-medium text-foreground text-sm">{formData.instructions}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 text-accent-foreground">
                   <MessageSquare className="w-5 h-5" />
                   <p className="text-sm">
-                    After creating, you can upload documents and connect channels
+                    Después de crear, puedes subir documentos y conectar canales
                   </p>
                 </div>
               </div>
@@ -286,11 +283,11 @@ Example: 'You are a helpful sales assistant for our software company. You should
                 disabled={currentStep === 1}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                {t('createAgent.back').replace('Volver a Agentes', 'Atrás')}
               </Button>
               {currentStep < steps.length ? (
                 <Button onClick={handleNext} disabled={!canProceed()}>
-                  Next
+                  Siguiente
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
@@ -300,7 +297,7 @@ Example: 'You are a helpful sales assistant for our software company. You should
                   ) : (
                     <Check className="w-4 h-4 mr-2" />
                   )}
-                  Create Agent
+                  {t('createAgent.create')}
                 </Button>
               )}
             </div>
