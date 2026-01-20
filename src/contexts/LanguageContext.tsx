@@ -28,25 +28,25 @@ export const timezones: TimezoneOption[] = [
   { value: 'America/Lima', label: 'Perú (Lima)', offset: 'UTC-5' },
   { value: 'America/Montevideo', label: 'Uruguay (Montevideo)', offset: 'UTC-3' },
   { value: 'America/Caracas', label: 'Venezuela (Caracas)', offset: 'UTC-4' },
-  
+
   // América del Norte
   { value: 'America/Mexico_City', label: 'México (Ciudad de México)', offset: 'UTC-6' },
   { value: 'America/New_York', label: 'Estados Unidos (Nueva York)', offset: 'UTC-5' },
   { value: 'America/Los_Angeles', label: 'Estados Unidos (Los Ángeles)', offset: 'UTC-8' },
   { value: 'America/Chicago', label: 'Estados Unidos (Chicago)', offset: 'UTC-6' },
-  
+
   // Europa
   { value: 'Europe/Madrid', label: 'España (Madrid)', offset: 'UTC+1' },
   { value: 'Europe/London', label: 'Reino Unido (Londres)', offset: 'UTC+0' },
   { value: 'Europe/Paris', label: 'Francia (París)', offset: 'UTC+1' },
   { value: 'Europe/Berlin', label: 'Alemania (Berlín)', offset: 'UTC+1' },
   { value: 'Europe/Rome', label: 'Italia (Roma)', offset: 'UTC+1' },
-  
+
   // Asia
   { value: 'Asia/Tokyo', label: 'Japón (Tokio)', offset: 'UTC+9' },
   { value: 'Asia/Shanghai', label: 'China (Shanghái)', offset: 'UTC+8' },
   { value: 'Asia/Dubai', label: 'Emiratos Árabes (Dubái)', offset: 'UTC+4' },
-  
+
   // Oceanía
   { value: 'Australia/Sydney', label: 'Australia (Sídney)', offset: 'UTC+11' },
   { value: 'Pacific/Auckland', label: 'Nueva Zelanda (Auckland)', offset: 'UTC+13' },
@@ -64,7 +64,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.settings': 'Configuración',
     'nav.user': 'Usuario',
     'nav.admin': 'Admin',
-    
+
     // Admin nav
     'nav.admin.overview': 'Vista General',
     'nav.admin.users': 'Usuarios',
@@ -74,13 +74,13 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.admin.aiConfig': 'Config. IA',
     'nav.admin.security': 'Seguridad',
     'nav.admin.dangerZone': 'Zona de Peligro',
-    
+
     // Header
     'header.search': 'Buscar agentes, documentos...',
     'header.credits': 'créditos',
     'header.profile': 'Perfil',
     'header.logout': 'Cerrar Sesión',
-    
+
     // Dashboard
     'dashboard.title': 'Panel Principal',
     'dashboard.welcome': '¡Bienvenido de nuevo, {name}! Aquí tienes un resumen de tus agentes IA.',
@@ -95,7 +95,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.noAgentsYet': 'Aún no hay agentes',
     'dashboard.createFirstAgent': 'Crea tu primer agente IA para comenzar',
     'dashboard.createAgent': 'Crear Agente',
-    
+
     // Settings
     'settings.title': 'Configuración',
     'settings.subtitle': 'Gestiona tu cuenta y preferencias',
@@ -155,7 +155,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.timezone': 'Zona Horaria',
     'settings.timezoneDesc': 'Todas las fechas y horas se mostrarán en esta zona horaria',
     'settings.selectTimezone': 'Seleccionar zona horaria',
-    
+
     // Agents
     'agents.title': 'Agentes IA',
     'agents.subtitle': 'Gestiona y configura tus agentes conversacionales',
@@ -170,17 +170,27 @@ const translations: Record<Language, Record<string, string>> = {
     'agents.delete': 'Eliminar',
     'agents.deleteConfirmTitle': '¿Eliminar agente?',
     'agents.deleteConfirmDesc': 'Esta acción no se puede deshacer. El agente y todos sus datos serán eliminados permanentemente.',
-    
+
     // Create Agent
     'createAgent.title': 'Crear Nuevo Agente',
     'createAgent.subtitle': 'Configura tu nuevo agente IA conversacional',
     'createAgent.back': 'Volver a Agentes',
     'createAgent.basicInfo': 'Información Básica',
-    'createAgent.basicInfoDesc': 'Información básica sobre tu agente',
+    'createAgent.basicInfoDesc': 'Información básica sobre tu agente y tu empresa',
     'createAgent.agentName': 'Nombre del Agente',
     'createAgent.agentNamePlaceholder': 'Ej: Asistente de Ventas',
-    'createAgent.description': 'Descripción',
+    'createAgent.description': 'Descripción del Agente',
     'createAgent.descriptionPlaceholder': 'Describe brevemente qué hace este agente...',
+    'createAgent.companyName': 'Nombre de la Empresa',
+    'createAgent.companyNamePlaceholder': 'Ej: Mi Empresa S.A.',
+    'createAgent.companyDescription': '¿A qué se dedica tu empresa?',
+    'createAgent.companyDescriptionPlaceholder': 'Describe tu empresa, qué productos o servicios ofrece...',
+    'createAgent.productsServices': 'Productos o Servicios Principales',
+    'createAgent.productsServicesPlaceholder': 'Lista los productos o servicios más importantes (separados por coma)',
+    'createAgent.targetAudience': 'Público Objetivo',
+    'createAgent.targetAudiencePlaceholder': 'Describe a quién va dirigido (ej: PyMEs, consumidores finales, profesionales)',
+    'createAgent.companyWebsite': 'Sitio Web (opcional)',
+    'createAgent.companyWebsitePlaceholder': 'https://www.tuempresa.com',
     'createAgent.objective': 'Objetivo',
     'createAgent.selectObjective': 'Seleccionar objetivo',
     'createAgent.sales': 'Ventas',
@@ -198,7 +208,7 @@ const translations: Record<Language, Record<string, string>> = {
     'createAgent.systemPromptPlaceholder': 'Instrucciones detalladas para el comportamiento del agente...',
     'createAgent.creating': 'Creando...',
     'createAgent.create': 'Crear Agente',
-    
+
     // Documents
     'documents.title': 'Documentos',
     'documents.subtitle': 'Gestiona la base de conocimiento de tus agentes',
@@ -218,7 +228,7 @@ const translations: Record<Language, Record<string, string>> = {
     'documents.retry': 'Reintentar',
     'documents.noDocuments': 'No hay documentos',
     'documents.uploadFirst': 'Sube tu primer documento para comenzar',
-    
+
     // Billing
     'billing.title': 'Facturación',
     'billing.subtitle': 'Gestiona tu suscripción y créditos',
@@ -235,7 +245,7 @@ const translations: Record<Language, Record<string, string>> = {
     'billing.usage': 'Uso',
     'billing.bonus': 'Bonificación',
     'billing.refund': 'Reembolso',
-    
+
     // Common
     'common.loading': 'Cargando...',
     'common.error': 'Error',
@@ -248,6 +258,54 @@ const translations: Record<Language, Record<string, string>> = {
     'common.search': 'Buscar',
     'common.filter': 'Filtrar',
     'common.status': 'Estado',
+
+    // Edit Agent
+    'editAgent.backToAgents': 'Volver a Agentes',
+    'editAgent.configure': 'Configura los ajustes y comportamiento de tu agente',
+    'editAgent.general': 'General',
+    'editAgent.behavior': 'Comportamiento',
+    'editAgent.prompts': 'Prompts',
+    'editAgent.settings': 'Ajustes',
+    'editAgent.basicInfo': 'Información Básica',
+    'editAgent.basicInfoDesc': 'Configura los detalles básicos de tu agente',
+    'editAgent.agentName': 'Nombre del Agente',
+    'editAgent.description': 'Descripción',
+    'editAgent.status': 'Estado',
+    'editAgent.draft': 'Borrador',
+    'editAgent.active': 'Activo',
+    'editAgent.paused': 'Pausado',
+    'editAgent.archived': 'Archivado',
+    'editAgent.agentBehavior': 'Comportamiento del Agente',
+    'editAgent.agentBehaviorDesc': 'Configura el objetivo y tono de tu agente',
+    'editAgent.objective': 'Objetivo',
+    'editAgent.tone': 'Tono',
+    'editAgent.promptsMessages': 'Prompts y Mensajes',
+    'editAgent.promptsMessagesDesc': 'Configura el system prompt y mensaje de bienvenida',
+    'editAgent.describeAgent': 'Describe tu agente (Lenguaje Natural)',
+    'editAgent.describeAgentPlaceholder': 'Describe qué quieres que haga tu agente en términos simples. Por ejemplo: "Quiero un asistente de ventas amigable que conozca nuestros 3 productos principales y siempre ofrezca agendar una demo..."',
+    'editAgent.describeAgentHelp': 'Escribe lo que quieres que haga tu agente con tus propias palabras. Nuestra IA lo convertirá en un prompt profesional.',
+    'editAgent.generateWithAI': 'Generar Prompt con IA',
+    'editAgent.generating': 'Generando...',
+    'editAgent.technicalPromptSeparator': 'Prompt Técnico (Generado o Manual)',
+    'editAgent.systemPrompt': 'System Prompt',
+    'editAgent.systemPromptPlaceholder': 'Eres un asistente útil que...',
+    'editAgent.systemPromptHelp': 'Este es el prompt técnico que define cómo se comporta tu agente. Puedes editarlo manualmente o generarlo usando IA.',
+    'editAgent.welcomeMessage': 'Mensaje de Bienvenida',
+    'editAgent.welcomeMessagePlaceholder': '¡Hola! ¿En qué puedo ayudarte hoy?',
+    'editAgent.welcomeMessageHelp': 'Este es el primer mensaje que verán los usuarios cuando inicien una conversación.',
+    'editAgent.widgetSettings': 'Configuración del Widget',
+    'editAgent.widgetSettingsDesc': 'Configura cómo aparece el widget de chat en tu sitio web',
+    'editAgent.widgetColor': 'Color del Widget',
+    'editAgent.widgetPosition': 'Posición del Widget',
+    'editAgent.bottomRight': 'Abajo a la Derecha',
+    'editAgent.bottomLeft': 'Abajo a la Izquierda',
+    'editAgent.dangerZone': 'Zona de Peligro',
+    'editAgent.dangerZoneDesc': 'Acciones irreversibles que afectan a tu agente',
+    'editAgent.deleteAgent': 'Eliminar Agente',
+    'editAgent.cancel': 'Cancelar',
+    'editAgent.saveChanges': 'Guardar Cambios',
+    'editAgent.deleteConfirmTitle': '¿Estás seguro?',
+    'editAgent.deleteConfirmDesc': 'Esta acción no se puede deshacer. Se eliminará permanentemente el agente y todos sus datos incluyendo conversaciones y mensajes.',
   },
   en: {
     // Navigation
@@ -260,7 +318,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.settings': 'Settings',
     'nav.user': 'User',
     'nav.admin': 'Admin',
-    
+
     // Admin nav
     'nav.admin.overview': 'Overview',
     'nav.admin.users': 'Users',
@@ -270,13 +328,13 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.admin.aiConfig': 'AI Config',
     'nav.admin.security': 'Security',
     'nav.admin.dangerZone': 'Danger Zone',
-    
+
     // Header
     'header.search': 'Search agents, documents...',
     'header.credits': 'credits',
     'header.profile': 'Profile',
     'header.logout': 'Logout',
-    
+
     // Dashboard
     'dashboard.title': 'Dashboard',
     'dashboard.welcome': 'Welcome back, {name}! Here\'s an overview of your AI agents.',
@@ -291,7 +349,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.noAgentsYet': 'No agents yet',
     'dashboard.createFirstAgent': 'Create your first AI agent to get started',
     'dashboard.createAgent': 'Create Agent',
-    
+
     // Settings
     'settings.title': 'Settings',
     'settings.subtitle': 'Manage your account and preferences',
@@ -351,7 +409,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.timezone': 'Timezone',
     'settings.timezoneDesc': 'All dates and times will be displayed in this timezone',
     'settings.selectTimezone': 'Select timezone',
-    
+
     // Agents
     'agents.title': 'AI Agents',
     'agents.subtitle': 'Manage and configure your conversational agents',
@@ -366,17 +424,27 @@ const translations: Record<Language, Record<string, string>> = {
     'agents.delete': 'Delete',
     'agents.deleteConfirmTitle': 'Delete agent?',
     'agents.deleteConfirmDesc': 'This action cannot be undone. The agent and all its data will be permanently deleted.',
-    
+
     // Create Agent
     'createAgent.title': 'Create New Agent',
     'createAgent.subtitle': 'Configure your new conversational AI agent',
     'createAgent.back': 'Back to Agents',
     'createAgent.basicInfo': 'Basic Information',
-    'createAgent.basicInfoDesc': 'Basic information about your agent',
+    'createAgent.basicInfoDesc': 'Basic information about your agent and company',
     'createAgent.agentName': 'Agent Name',
     'createAgent.agentNamePlaceholder': 'E.g: Sales Assistant',
-    'createAgent.description': 'Description',
+    'createAgent.description': 'Agent Description',
     'createAgent.descriptionPlaceholder': 'Briefly describe what this agent does...',
+    'createAgent.companyName': 'Company Name',
+    'createAgent.companyNamePlaceholder': 'E.g: My Company Inc.',
+    'createAgent.companyDescription': 'What does your company do?',
+    'createAgent.companyDescriptionPlaceholder': 'Describe your company, products or services...',
+    'createAgent.productsServices': 'Main Products or Services',
+    'createAgent.productsServicesPlaceholder': 'List your main products or services (comma separated)',
+    'createAgent.targetAudience': 'Target Audience',
+    'createAgent.targetAudiencePlaceholder': 'Describe your target audience (e.g: SMBs, consumers, professionals)',
+    'createAgent.companyWebsite': 'Website (optional)',
+    'createAgent.companyWebsitePlaceholder': 'https://www.yourcompany.com',
     'createAgent.objective': 'Objective',
     'createAgent.selectObjective': 'Select objective',
     'createAgent.sales': 'Sales',
@@ -394,7 +462,7 @@ const translations: Record<Language, Record<string, string>> = {
     'createAgent.systemPromptPlaceholder': 'Detailed instructions for agent behavior...',
     'createAgent.creating': 'Creating...',
     'createAgent.create': 'Create Agent',
-    
+
     // Documents
     'documents.title': 'Documents',
     'documents.subtitle': 'Manage the knowledge base for your agents',
@@ -414,7 +482,7 @@ const translations: Record<Language, Record<string, string>> = {
     'documents.retry': 'Retry',
     'documents.noDocuments': 'No documents',
     'documents.uploadFirst': 'Upload your first document to get started',
-    
+
     // Billing
     'billing.title': 'Billing',
     'billing.subtitle': 'Manage your subscription and credits',
@@ -431,7 +499,7 @@ const translations: Record<Language, Record<string, string>> = {
     'billing.usage': 'Usage',
     'billing.bonus': 'Bonus',
     'billing.refund': 'Refund',
-    
+
     // Common
     'common.loading': 'Loading...',
     'common.error': 'Error',
@@ -444,6 +512,54 @@ const translations: Record<Language, Record<string, string>> = {
     'common.search': 'Search',
     'common.filter': 'Filter',
     'common.status': 'Status',
+
+    // Edit Agent
+    'editAgent.backToAgents': 'Back to Agents',
+    'editAgent.configure': 'Configure your agent settings and behavior',
+    'editAgent.general': 'General',
+    'editAgent.behavior': 'Behavior',
+    'editAgent.prompts': 'Prompts',
+    'editAgent.settings': 'Settings',
+    'editAgent.basicInfo': 'Basic Information',
+    'editAgent.basicInfoDesc': 'Configure the basic details of your agent',
+    'editAgent.agentName': 'Agent Name',
+    'editAgent.description': 'Description',
+    'editAgent.status': 'Status',
+    'editAgent.draft': 'Draft',
+    'editAgent.active': 'Active',
+    'editAgent.paused': 'Paused',
+    'editAgent.archived': 'Archived',
+    'editAgent.agentBehavior': 'Agent Behavior',
+    'editAgent.agentBehaviorDesc': 'Configure the objective and tone of your agent',
+    'editAgent.objective': 'Objective',
+    'editAgent.tone': 'Tone',
+    'editAgent.promptsMessages': 'Prompts & Messages',
+    'editAgent.promptsMessagesDesc': 'Configure the system prompt and welcome message',
+    'editAgent.describeAgent': 'Describe your agent (Natural Language)',
+    'editAgent.describeAgentPlaceholder': 'Describe what you want your agent to do in simple terms. For example: "I want a friendly sales assistant that knows about our 3 main products and always offers to schedule a demo..."',
+    'editAgent.describeAgentHelp': 'Write what you want your agent to do in your own words. Our AI will convert this into a professional prompt.',
+    'editAgent.generateWithAI': 'Generate Prompt with AI',
+    'editAgent.generating': 'Generating...',
+    'editAgent.technicalPromptSeparator': 'Technical Prompt (Generated or Manual)',
+    'editAgent.systemPrompt': 'System Prompt',
+    'editAgent.systemPromptPlaceholder': 'You are a helpful assistant that...',
+    'editAgent.systemPromptHelp': 'This is the technical prompt that defines how your agent behaves. You can edit it manually or generate it using AI.',
+    'editAgent.welcomeMessage': 'Welcome Message',
+    'editAgent.welcomeMessagePlaceholder': 'Hello! How can I help you today?',
+    'editAgent.welcomeMessageHelp': 'This is the first message users will see when they start a conversation.',
+    'editAgent.widgetSettings': 'Widget Settings',
+    'editAgent.widgetSettingsDesc': 'Configure how the chat widget appears on your website',
+    'editAgent.widgetColor': 'Widget Color',
+    'editAgent.widgetPosition': 'Widget Position',
+    'editAgent.bottomRight': 'Bottom Right',
+    'editAgent.bottomLeft': 'Bottom Left',
+    'editAgent.dangerZone': 'Danger Zone',
+    'editAgent.dangerZoneDesc': 'Irreversible actions that affect your agent',
+    'editAgent.deleteAgent': 'Delete Agent',
+    'editAgent.cancel': 'Cancel',
+    'editAgent.saveChanges': 'Save Changes',
+    'editAgent.deleteConfirmTitle': 'Are you sure?',
+    'editAgent.deleteConfirmDesc': 'This action cannot be undone. This will permanently delete the agent and all of its data including conversations and messages.',
   }
 };
 
@@ -518,15 +634,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <LanguageContext.Provider value={{ 
-      language, 
-      setLanguage, 
-      timezone, 
-      setTimezone, 
-      t, 
-      formatDate, 
-      formatDateTime, 
-      formatTime 
+    <LanguageContext.Provider value={{
+      language,
+      setLanguage,
+      timezone,
+      setTimezone,
+      t,
+      formatDate,
+      formatDateTime,
+      formatTime
     }}>
       {children}
     </LanguageContext.Provider>

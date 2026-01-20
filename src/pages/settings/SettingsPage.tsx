@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
-import { 
-  User, 
-  Building, 
-  Bell, 
-  Shield, 
+import { useState, useEffect, useRef } from 'react';
+import {
+  User,
+  Building,
+  Bell,
+  Shield,
   Trash2,
   Save,
   Download,
+  Upload,
   Globe,
-  Clock
+  Clock,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +42,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSettings } from '@/hooks/useSettings';
+import { sendWeeklyReport } from '@/lib/notifications';
+import { supabase } from '@/integrations/supabase/client';
 
 export const SettingsPage = () => {
   const { user } = useAuth();
@@ -46,6 +52,7 @@ export const SettingsPage = () => {
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
   const { language, setLanguage, timezone, setTimezone, t } = useLanguage();
+  const { settings, updateSettings, isLoading: isLoadingSettings } = useSettings();
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -54,6 +61,11 @@ export const SettingsPage = () => {
     company_website: '',
     phone: '',
   });
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -76,11 +88,116 @@ export const SettingsPage = () => {
     });
   };
 
-  const handleExportData = () => {
-    toast({
-      title: t('settings.exportStarted'),
-      description: t('settings.exportReady'),
-    });
+  // Real export function
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const { data, error } = await (supabase.rpc as any)('user_export_my_data');
+
+      if (error) throw error;
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().split('T')[0];
+      a.href = url;
+      a.download = `mi_backup_agenthub_${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Backup descargado',
+        description: 'Tu backup se ha descargado correctamente',
+      });
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast({
+        title: 'Error al exportar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Import backup file
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsRestoring(true);
+    try {
+      const text = await file.text();
+      const backupData = JSON.parse(text);
+
+      if (!backupData.backup_version || !backupData.data) {
+        throw new Error('Formato de backup inválido');
+      }
+
+      // Call restore RPC
+      const { data, error } = await (supabase.rpc as any)('user_restore_my_data', {
+        backup_data: backupData
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: 'Backup restaurado',
+          description: `Se restauraron ${data.restored.agents} agentes, perfil y configuraciones.`,
+        });
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error al restaurar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRestoring(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Delete account function
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const { data, error } = await (supabase.rpc as any)('user_delete_my_account');
+
+      if (error) throw error;
+
+      toast({
+        title: 'Cuenta eliminada',
+        description: 'Todos tus datos han sido eliminados',
+        variant: 'destructive',
+      });
+
+      await supabase.auth.signOut();
+      window.location.href = '/';
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'Error al eliminar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const currentTimezone = timezones.find(tz => tz.value === timezone);
@@ -220,34 +337,76 @@ export const SettingsPage = () => {
                 <CardDescription>{t('settings.chooseUpdates')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{t('settings.emailNotifications')}</p>
-                    <p className="text-sm text-muted-foreground">{t('settings.receiveEmailUpdates')}</p>
+                {isLoadingSettings ? (
+                  <div className="flex justify-center p-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{t('settings.usageAlerts')}</p>
-                    <p className="text-sm text-muted-foreground">{t('settings.lowCreditsNotify')}</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{t('settings.weeklyReports')}</p>
-                    <p className="text-sm text-muted-foreground">{t('settings.performanceSummary')}</p>
-                  </div>
-                  <Switch />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{t('settings.marketingUpdates')}</p>
-                    <p className="text-sm text-muted-foreground">{t('settings.newsAndProducts')}</p>
-                  </div>
-                  <Switch />
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{t('settings.emailNotifications')}</p>
+                        <p className="text-sm text-muted-foreground">{t('settings.receiveEmailUpdates')}</p>
+                      </div>
+                      <Switch
+                        checked={settings?.email_new_message ?? true}
+                        onCheckedChange={(checked) => updateSettings.mutate({ email_new_message: checked })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{t('settings.usageAlerts')}</p>
+                        <p className="text-sm text-muted-foreground">{t('settings.lowCreditsNotify')}</p>
+                      </div>
+                      <Switch
+                        checked={settings?.email_low_credits ?? true}
+                        onCheckedChange={(checked) => updateSettings.mutate({ email_low_credits: checked })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{t('settings.weeklyReports')}</p>
+                        <p className="text-sm text-muted-foreground">{t('settings.performanceSummary')}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            if (!user?.id) return;
+                            toast({ title: "Enviando reporte de prueba..." });
+                            try {
+                              const result = await sendWeeklyReport(user.id, { testMode: true });
+                              if (result.success) {
+                                toast({ title: "Reporte enviado", description: "Revisa tu n8n/email." });
+                              } else {
+                                toast({ title: "Error", description: "Falló el envío.", variant: "destructive" });
+                              }
+                            } catch (e) {
+                              toast({ title: "Error", description: "Error inesperado.", variant: "destructive" });
+                            }
+                          }}
+                        >
+                          Probar
+                        </Button>
+                        <Switch
+                          checked={settings?.email_weekly_report ?? false}
+                          onCheckedChange={(checked) => updateSettings.mutate({ email_weekly_report: checked })}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{t('settings.marketingUpdates')}</p>
+                        <p className="text-sm text-muted-foreground">{t('settings.newsAndProducts')}</p>
+                      </div>
+                      <Switch
+                        checked={settings?.email_marketing ?? false}
+                        onCheckedChange={(checked) => updateSettings.mutate({ email_marketing: checked })}
+                      />
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -341,39 +500,103 @@ export const SettingsPage = () => {
                 <CardDescription>{t('settings.exportOrDelete')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Export */}
                 <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                   <div>
                     <p className="font-medium text-foreground">{t('settings.exportData')}</p>
                     <p className="text-sm text-muted-foreground">{t('settings.downloadData')}</p>
                   </div>
-                  <Button variant="outline" onClick={handleExportData}>
-                    <Download className="w-4 h-4 mr-2" />
+                  <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
+                    {isExporting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
                     {t('settings.export')}
                   </Button>
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/50 bg-destructive/5">
+
+                {/* Import */}
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                  <div>
+                    <p className="font-medium text-foreground">Importar Backup</p>
+                    <p className="text-sm text-muted-foreground">Cargar un archivo de backup previo</p>
+                  </div>
+                  <Button variant="outline" onClick={handleImportClick} disabled={isRestoring}>
+                    {isRestoring ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    {isRestoring ? 'Restaurando...' : 'Importar'}
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".json"
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Delete Account - with double confirmation */}
+                <div className="p-4 rounded-lg border border-destructive/50 bg-destructive/5 space-y-4">
                   <div>
                     <p className="font-medium text-foreground">{t('settings.deleteAccount')}</p>
                     <p className="text-sm text-muted-foreground">{t('settings.permanentlyDelete')}</p>
                   </div>
+
+                  <div className="p-3 rounded bg-destructive/10 border border-destructive/20">
+                    <p className="text-sm text-destructive font-medium mb-1">
+                      ⚠️ Esta acción es irreversible
+                    </p>
+                    <p className="text-xs text-destructive/80">
+                      Se eliminarán todos tus agentes, documentos, conversaciones, créditos y configuraciones.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm">Escribe "ELIMINAR CUENTA" para habilitar</Label>
+                    <Input
+                      placeholder="ELIMINAR CUENTA"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      className="max-w-xs"
+                    />
+                  </div>
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive">
-                        <Trash2 className="w-4 h-4 mr-2" />
+                      <Button
+                        variant="destructive"
+                        disabled={deleteConfirmText !== 'ELIMINAR CUENTA' || isDeleting}
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 mr-2" />
+                        )}
                         {t('settings.delete')}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>{t('settings.deleteConfirmTitle')}</AlertDialogTitle>
+                        <AlertDialogTitle className="text-destructive">
+                          ⚠️ ¿Estás absolutamente seguro?
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                          {t('settings.deleteConfirmDesc')}
+                          Esta acción eliminará permanentemente tu cuenta y todos tus datos.
+                          <br /><br />
+                          <strong>No podrás recuperar nada después de confirmar.</strong>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>{t('settings.cancel')}</AlertDialogCancel>
-                        <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          {t('settings.deleteAccountBtn')}
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Sí, eliminar mi cuenta
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -384,7 +607,7 @@ export const SettingsPage = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 };
 

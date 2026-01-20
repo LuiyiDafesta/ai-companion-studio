@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Agent, AgentObjective, AgentStatus } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
+import { getWebhookUrl } from '@/hooks/useWebhookUrl';
 
 interface CreateAgentData {
   name: string;
@@ -11,6 +12,9 @@ interface CreateAgentData {
   personality?: string;
   system_prompt?: string;
   welcome_message?: string;
+  widget_color?: string;
+  widget_position?: string;
+  status?: AgentStatus;
 }
 
 interface UpdateAgentData extends Partial<CreateAgentData> {
@@ -24,14 +28,48 @@ interface UpdateAgentData extends Partial<CreateAgentData> {
   tools?: string[];
 }
 
+// Función helper para llamar al webhook de embeddings
+async function callEmbeddingsWebhook(action: 'create' | 'delete', agentId: string, agentName: string) {
+  const webhookUrl = await getWebhookUrl('VITE_N8N_EMBEDDINGS_WEBHOOK_URL');
+
+  if (!webhookUrl) {
+    console.warn('VITE_N8N_EMBEDDINGS_WEBHOOK_URL not configured');
+    // Si no está configurado, podemos decidir si fallar o simplemente ignorarlo.
+    // Como era comportamiento original, retornamos.
+    return;
+  }
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        agentId,
+        agentName,
+        timestamp: new Date().toISOString()
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Embeddings webhook error: ${response.status}`);
+    } else {
+      console.log(`✅ Embeddings table ${action}d for agent ${agentId}`);
+    }
+  } catch (error) {
+    console.error('Error calling embeddings webhook:', error);
+    // No lanzamos el error para no bloquear la creación/borrado del agente
+  }
+}
+
 export function useAgents() {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ['agents'],
+    queryKey: ['ah_agents'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('agents')
+        .from('ah_agents')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -53,10 +91,10 @@ export function useAgent(id: string) {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ['agents', id],
+    queryKey: ['ah_agents', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('agents')
+        .from('ah_agents')
         .select('*')
         .eq('id', id)
         .single();
@@ -86,7 +124,7 @@ export function useCreateAgent() {
       if (!user) throw new Error('Not authenticated');
 
       const { data: agent, error } = await supabase
-        .from('agents')
+        .from('ah_agents')
         .insert({
           user_id: user.id,
           name: data.name,
@@ -96,23 +134,31 @@ export function useCreateAgent() {
           personality: data.personality,
           system_prompt: data.system_prompt,
           welcome_message: data.welcome_message,
+          widget_color: data.widget_color,
+          widget_position: data.widget_position,
+          status: data.status,
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Llamar al webhook de n8n en paralelo para crear la tabla de embeddings
+      // No esperamos la respuesta para no bloquear la UI
+      callEmbeddingsWebhook('create', agent.id, agent.name);
+
       return agent as Agent;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['agents'] });
+      queryClient.invalidateQueries({ queryKey: ['ah_agents'] });
       toast({
-        title: 'Agent created!',
-        description: 'Your new agent is ready to be configured.',
+        title: '¡Agente creado!',
+        description: 'Tu nuevo agente está listo para configurar.',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error creating agent',
+        title: 'Error al crear agente',
         description: error.message,
         variant: 'destructive',
       });
@@ -127,7 +173,7 @@ export function useUpdateAgent() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateAgentData }) => {
       const { data: agent, error } = await supabase
-        .from('agents')
+        .from('ah_agents')
         .update(data)
         .eq('id', id)
         .select()
@@ -137,16 +183,16 @@ export function useUpdateAgent() {
       return agent as Agent;
     },
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['agents'] });
-      queryClient.invalidateQueries({ queryKey: ['agents', id] });
+      queryClient.invalidateQueries({ queryKey: ['ah_agents'] });
+      queryClient.invalidateQueries({ queryKey: ['ah_agents', id] });
       toast({
-        title: 'Agent updated',
-        description: 'Changes saved successfully.',
+        title: 'Agente actualizado',
+        description: 'Los cambios se guardaron correctamente.',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error updating agent',
+        title: 'Error al actualizar agente',
         description: error.message,
         variant: 'destructive',
       });
@@ -160,8 +206,19 @@ export function useDeleteAgent() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Primero obtenemos el nombre del agente para el log
+      const { data: agent } = await supabase
+        .from('ah_agents')
+        .select('name')
+        .eq('id', id)
+        .single();
+
+      // Llamar al webhook de n8n para borrar la tabla de embeddings
+      // Lo hacemos ANTES de borrar el agente para tener el ID
+      await callEmbeddingsWebhook('delete', id, agent?.name || 'unknown');
+
       const { error } = await supabase
-        .from('agents')
+        .from('ah_agents')
         .delete()
         .eq('id', id);
 
@@ -170,13 +227,13 @@ export function useDeleteAgent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
       toast({
-        title: 'Agent deleted',
-        description: 'The agent has been removed.',
+        title: 'Agente eliminado',
+        description: 'El agente y su tabla de embeddings han sido eliminados.',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error deleting agent',
+        title: 'Error al eliminar agente',
         description: error.message,
         variant: 'destructive',
       });

@@ -101,7 +101,7 @@ const Index = () => {
             Your Business
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Create conversational AI agents trained on your documents. 
+            Create conversational AI agents trained on your documents.
             Deploy to web, WhatsApp, and more in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -118,7 +118,7 @@ const Index = () => {
             </Link>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
-            No credit card required • 1,000 free credits
+            No credit card required • 50 free credits
           </p>
         </div>
       </section>
@@ -183,7 +183,7 @@ const Index = () => {
                 Transform Your Customer Experience
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
-                Join thousands of businesses using AI agents to provide instant, 
+                Join thousands of businesses using AI agents to provide instant,
                 personalized support at scale.
               </p>
               <ul className="space-y-4">

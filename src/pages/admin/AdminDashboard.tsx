@@ -1,32 +1,69 @@
-import { 
-  Users, 
-  Bot, 
-  MessageSquare, 
-  CreditCard, 
+import {
+  Users,
+  Bot,
+  MessageSquare,
+  CreditCard,
   TrendingUp,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-
-const usageData = [
-  { name: 'Week 1', users: 120, messages: 4500, tokens: 45000 },
-  { name: 'Week 2', users: 145, messages: 5200, tokens: 52000 },
-  { name: 'Week 3', users: 168, messages: 6100, tokens: 61000 },
-  { name: 'Week 4', users: 189, messages: 7200, tokens: 72000 },
-];
-
-const agentUsage = [
-  { name: 'Sales Bot', messages: 2340 },
-  { name: 'Support', messages: 1890 },
-  { name: 'FAQ', messages: 1200 },
-  { name: 'Lead Gen', messages: 890 },
-  { name: 'Booking', messages: 650 },
-];
+import { useAdminStats } from '@/hooks/useAdmin';
+import { useAgents } from '@/hooks/useAgents';
 
 export const AdminDashboard = () => {
+  const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const { data: agents } = useAgents();
+
+  // Create agent usage data from real stats
+  const agentUsage = stats?.topAgents?.map((agent: any) => ({
+    name: agent.name.length > 15 ? agent.name.substring(0, 15) + '...' : agent.name,
+    messages: agent.conversations_count || 0,
+  })) || [];
+
+  // Format recent activity
+  const recentActivity = [
+    ...(stats?.recentProfiles?.map(p => ({
+      action: 'New user registered',
+      user: p.email,
+      time: formatTimeAgo(p.created_at),
+      sortDate: new Date(p.created_at),
+    })) || []),
+    ...(stats?.recentAgents?.map(a => ({
+      action: 'Agent created',
+      user: a.name,
+      time: formatTimeAgo(a.created_at),
+      sortDate: new Date(a.created_at),
+    })) || []),
+  ].sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime()).slice(0, 5);
+
+  function formatTimeAgo(dateString: string) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  }
+
+  if (statsLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -40,27 +77,23 @@ export const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Total Users"
-            value={189}
+            value={stats?.totalUsers || 0}
             icon={<Users className="w-6 h-6" />}
-            trend={{ value: 23, isPositive: true }}
           />
           <StatsCard
             title="Active Agents"
-            value={342}
+            value={stats?.activeAgents || 0}
             icon={<Bot className="w-6 h-6" />}
-            trend={{ value: 15, isPositive: true }}
           />
           <StatsCard
-            title="Messages Today"
-            value="12.4K"
+            title="Total Messages"
+            value={stats?.totalMessages?.toLocaleString() || '0'}
             icon={<MessageSquare className="w-6 h-6" />}
-            trend={{ value: 8, isPositive: true }}
           />
           <StatsCard
-            title="Revenue (MTD)"
-            value="$24,580"
+            title="Credits Used"
+            value={stats?.totalCreditsUsed?.toLocaleString() || '0'}
             icon={<CreditCard className="w-6 h-6" />}
-            trend={{ value: 12, isPositive: true }}
           />
         </div>
 
@@ -69,51 +102,43 @@ export const AdminDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Platform Growth
+                Platform Summary
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={usageData}>
-                    <defs>
-                      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        color: 'hsl(var(--foreground))'
-                      }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="users" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2}
-                      fillOpacity={1} 
-                      fill="url(#colorUsers)" 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Total Users</span>
+                  <span className="font-semibold text-foreground">{stats?.totalUsers || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Total Agents</span>
+                  <span className="font-semibold text-foreground">{stats?.totalAgents || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Active Agents</span>
+                  <span className="font-semibold text-foreground text-green-600">{stats?.activeAgents || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Draft Agents</span>
+                  <span className="font-semibold text-foreground text-yellow-600">{stats?.draftAgents || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Total Tokens Used</span>
+                  <span className="font-semibold text-foreground">{stats?.totalTokens?.toLocaleString() || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Total Conversations</span>
+                  <span className="font-semibold text-foreground">{stats?.totalConversations || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Total Messages</span>
+                  <span className="font-semibold text-foreground">{stats?.totalMessages || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="text-muted-foreground">Credits Purchased</span>
+                  <span className="font-semibold text-foreground">{stats?.totalCreditsPurchased?.toLocaleString() || 0}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -122,46 +147,52 @@ export const AdminDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
-                Top Agents by Usage
+                Top Agents
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={agentUsage} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                    <XAxis 
-                      type="number"
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis 
-                      type="category"
-                      dataKey="name"
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      width={80}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        color: 'hsl(var(--foreground))'
-                      }}
-                    />
-                    <Bar 
-                      dataKey="messages" 
-                      fill="hsl(var(--primary))" 
-                      radius={[0, 4, 4, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {agentUsage.length > 0 ? (
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={agentUsage} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                      <XAxis
+                        type="number"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        width={100}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))'
+                        }}
+                      />
+                      <Bar
+                        dataKey="messages"
+                        fill="hsl(var(--primary))"
+                        radius={[0, 4, 4, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  No agents created yet
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -171,22 +202,23 @@ export const AdminDashboard = () => {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { action: 'New user registered', user: 'john@example.com', time: '2 min ago' },
-                { action: 'Agent created', user: 'sarah@company.com', time: '15 min ago' },
-                { action: 'Subscription upgraded', user: 'mike@startup.io', time: '1 hour ago' },
-                { action: 'Documents uploaded', user: 'alice@corp.com', time: '2 hours ago' },
-              ].map((activity, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors">
-                  <div>
-                    <p className="font-medium text-foreground">{activity.action}</p>
-                    <p className="text-sm text-muted-foreground">{activity.user}</p>
+            {recentActivity.length > 0 ? (
+              <div className="space-y-4">
+                {recentActivity.map((activity, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                    <div>
+                      <p className="font-medium text-foreground">{activity.action}</p>
+                      <p className="text-sm text-muted-foreground">{activity.user}</p>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{activity.time}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{activity.time}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No recent activity
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

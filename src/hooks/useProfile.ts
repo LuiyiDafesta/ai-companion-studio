@@ -20,11 +20,12 @@ export function useProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Intentar obtener perfil existente
       const { data, error } = await supabase
-        .from('profiles')
+        .from('ah_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         toast({
@@ -33,6 +34,21 @@ export function useProfile() {
           variant: 'destructive',
         });
         throw error;
+      }
+
+      // Si no existe el perfil, crearlo
+      if (!data) {
+        const { data: newProfile, error: createError } = await supabase
+          .from('ah_profiles')
+          .insert({ user_id: user.id, email: user.email })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          throw createError;
+        }
+        return newProfile as Profile;
       }
 
       return data as Profile;
@@ -50,7 +66,7 @@ export function useUpdateProfile() {
       if (!user) throw new Error('Not authenticated');
 
       const { data: profile, error } = await supabase
-        .from('profiles')
+        .from('ah_profiles')
         .update(data)
         .eq('user_id', user.id)
         .select()

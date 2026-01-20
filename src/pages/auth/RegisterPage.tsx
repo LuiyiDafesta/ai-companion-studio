@@ -29,7 +29,7 @@ export const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!acceptTerms) {
       toast({
         title: "Terms required",
@@ -49,9 +49,9 @@ export const RegisterPage = () => {
     }
 
     setIsLoading(true);
-    
+
     const { error } = await register(email, password, fullName, company || undefined);
-    
+
     if (error) {
       let message = 'Failed to create account. Please try again.';
       if (error.message.includes('already registered')) {
@@ -59,7 +59,7 @@ export const RegisterPage = () => {
       } else if (error.message.includes('password')) {
         message = 'Password must be at least 8 characters.';
       }
-      
+
       toast({
         title: "Registration failed",
         description: message,
@@ -68,11 +68,11 @@ export const RegisterPage = () => {
     } else {
       toast({
         title: "Account created!",
-        description: "Welcome to AgentHub. You've received 1000 free credits!",
+        description: "Welcome to AgentHub. You've received 50 free credits!",
       });
       navigate('/dashboard');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -155,8 +155,8 @@ export const RegisterPage = () => {
               </div>
 
               <div className="flex items-start gap-2">
-                <Checkbox 
-                  id="terms" 
+                <Checkbox
+                  id="terms"
                   checked={acceptTerms}
                   onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
                 />

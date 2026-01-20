@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8080",
+  "loginUser": "lsnetinformatica2024@gmail.com",
+  "loginPassword": "Luiyi260879@",
+  "executionArgs": {
+    "projectName": "ai-companion-studio",
+    "projectPath": "c:/Users/sturz/Desktop/Pruebas/Agenthubs/ai-companion-studio",
+    "testIds": [],
+    "additionalInstruction": "Focus primarily on security aspects: \n1. Verify XSS protection in the Chat Widget input and message rendering.\n2. Check access control for /admin and /agents routes (should redirect to login).\n3. Verify that API endpoints (mocked or real) enforce RLS (only user's own agents/conversations).\n4. Review code patterns for hardcoded secrets or insecure practices.\n5. Ensure the 'resolved' conversation logic handles unauthorized attempts securely.",
+    "envs": {
+      "API_KEY": "sk-user-PHVUaIiB3MhloZ_eQyDfIwu8s2zfCTjeWfvI0Qud9UjpOnY7QgjxxVSEmr68aJQaL034oRqxaewLqFx_WnfFNRSJZ19GV-Q2D3s7ibGoaTPbAD9R1bekXiuTujf-gpyDULk"
+    }
+  },
+  "proxy": "http://739f8dce-d3c6-4d92-9066-bad32cb0f430:qPgayAJPcudYMhPe3aIO8blFQsRL5LTI@tun.testsprite.com:8080"
+}

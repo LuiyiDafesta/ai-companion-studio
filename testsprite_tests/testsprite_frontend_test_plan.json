@@ -1,0 +1,378 @@
+[
+  {
+    "id": "TC001",
+    "title": "Create WhatsApp Instance Successfully",
+    "description": "Verify that a developer can successfully create a new WhatsApp instance using the API endpoint with valid input data.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send POST request to the instance creation endpoint with valid parameters."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the response status is success (201 Created)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the response body contains correct instance ID and initial state."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Fail to Create WhatsApp Instance with Invalid Data",
+    "description": "Verify that the API returns appropriate error responses when instance creation input data is invalid or incomplete.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send POST request to instance creation endpoint with missing required fields."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the response status indicates client error (400 Bad Request)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the response body contains error messages describing the missing or invalid fields."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Generate and Retrieve QR Code for Device Pairing",
+    "description": "Verify that the QR code is generated successfully for a WhatsApp instance and the QR code data is valid and retrievable.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Request QR code generation from the API for an existing WhatsApp instance."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the API response includes valid QR code data (e.g., image or string)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the QR code can be scanned successfully to initiate pairing."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Send Text Message via API",
+    "description": "Verify that applications can send text messages successfully to WhatsApp contacts using the API endpoint.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send POST request to the messaging endpoint with valid text message payload."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the response status indicates message accepted (202 Accepted or 200 OK)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the WhatsApp contact receives the text message."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Send Media Message via API",
+    "description": "Verify that applications can send media messages (images, audio, documents) through the API successfully.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send POST request with media message payload specifying media type and content URL or base64 data."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the API acknowledges receipt and queues the media message."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the media message is delivered and received correctly at the WhatsApp contact end."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Receive Real-time Incoming Message Events via WebSocket",
+    "description": "Verify that incoming WhatsApp messages trigger real-time event notifications delivered via WebSocket without delay or data loss.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Establish a WebSocket connection to the real-time event API."
+      },
+      {
+        "type": "action",
+        "description": "Send a message from an external WhatsApp contact to the paired instance."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the incoming message event is received over WebSocket with complete and accurate data."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Receive Real-time Event Notifications via Webhook",
+    "description": "Verify that incoming WhatsApp messages and status updates trigger webhook calls with correct event data.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Configure a webhook URL to receive events."
+      },
+      {
+        "type": "action",
+        "description": "Send an incoming WhatsApp message from a contact."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the webhook endpoint receives a POST request with correct event payload immediately."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Store and Retrieve Messages with PostgreSQL Integration",
+    "description": "Verify that messages are persistently stored in PostgreSQL when the optional storage feature is enabled, and can be retrieved via API.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Enable PostgreSQL integration for message storage."
+      },
+      {
+        "type": "action",
+        "description": "Send multiple text and media messages via the API."
+      },
+      {
+        "type": "action",
+        "description": "Retrieve stored messages for the WhatsApp instance using the API."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that all sent messages are stored accurately and returned correctly from the database."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Authentication Middleware Enforces API Access Controls",
+    "description": "Verify that all API endpoints enforce authentication middleware and reject unauthorized access attempts.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to access protected API endpoints without authentication tokens."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the API returns 401 Unauthorized error."
+      },
+      {
+        "type": "action",
+        "description": "Attempt access with invalid or expired authentication token."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the API returns 403 Forbidden or appropriate error."
+      },
+      {
+        "type": "action",
+        "description": "Access API endpoints with valid authentication."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is granted and functionality works as expected."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Docker Image Builds and Runs Correctly",
+    "description": "Verify that the provided Docker images build from source and run successfully in both development and production modes.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Build the Docker image using provided Dockerfile and Docker Compose configuration."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the image builds without errors or warnings."
+      },
+      {
+        "type": "action",
+        "description": "Run container from the built image in development mode."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the container starts successfully and the API responds to requests."
+      },
+      {
+        "type": "action",
+        "description": "Run container from the built image in production mode."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify stable and correct operation without crashes."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Access and Validate Auto-generated Swagger Documentation",
+    "description": "Verify that the Swagger/OpenAPI documentation for the API is auto-generated and accessible via the designated endpoint.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the Swagger documentation endpoint via browser or HTTP client."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the response contains valid Swagger JSON or UI page."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that all documented API endpoints are present and include correct request/response schemas."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "AMQP/RabbitMQ Messaging Workflow Support",
+    "description": "Verify that the API supports message publishing and consuming via AMQP/RabbitMQ for advanced messaging workflows.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Configure AMQP/RabbitMQ connection in API settings."
+      },
+      {
+        "type": "action",
+        "description": "Publish messages to the AMQP queue via the API."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify messages are correctly delivered into the RabbitMQ queue."
+      },
+      {
+        "type": "action",
+        "description": "Consume messages from the RabbitMQ queue through the API or a client."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify message contents and order are preserved during publish and consume cycles."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Logging Captures Detailed Information at Configured Log Levels",
+    "description": "Verify that the API logging feature produces log entries aligned with configured log levels, including info, warnings, and errors.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Set logging level to INFO and perform normal API operations."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify logs contain detailed information about API requests and responses."
+      },
+      {
+        "type": "action",
+        "description": "Set logging level to ERROR and trigger error scenarios."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify logs contain error messages but omit info-level logs."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Handle Unsupported Media Types Gracefully",
+    "description": "Verify that the API gracefully handles attempts to send unsupported media types and returns appropriate error messages.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send a media message request with unsupported media type or invalid file format."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the API responds with 415 Unsupported Media Type error."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the error response contains a descriptive message explaining the media type limit."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Validate Pagination and Filtering on Message Retrieval",
+    "description": "Verify that the API supports pagination and filtering parameters correctly when retrieving stored messages.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Request messages with pagination parameters (limit, offset)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the response contains the correct number of messages corresponding to the limit."
+      },
+      {
+        "type": "action",
+        "description": "Request messages filtered by date or sender using query parameters."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the response only includes messages meeting filter criteria."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Validate API Endpoint Handles Invalid HTTP Methods",
+    "description": "Verify that API endpoints return correct errors when accessed using unsupported HTTP methods.",
+    "category": "error handling",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send an unsupported HTTP method (e.g., PUT) to an endpoint that only accepts POST or GET."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the API responds with 405 Method Not Allowed error."
+      }
+    ]
+  }
+]

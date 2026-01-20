@@ -26,13 +26,47 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
 export const AgentsPage = () => {
   const navigate = useNavigate();
   const { data: agents, isLoading } = useAgents();
   const updateAgent = useUpdateAgent();
   const deleteAgent = useDeleteAgent();
   const { t } = useLanguage();
-  
+
+  // Fetch conversation counts per agent
+  const { data: conversationCounts } = useQuery({
+    queryKey: ['agent-conversations-count-list', (agents || []).map(a => a.id).join(',')],
+    queryFn: async () => {
+      if (!agents || agents.length === 0) return {};
+
+      const agentIds = agents.map(a => a.id);
+
+      // Fetch all conversations for these agents (ids only)
+      const { data, error } = await supabase
+        .from('ah_public_conversations')
+        .select('agent_id')
+        .in('agent_id', agentIds);
+
+      if (error) {
+        console.error('Error fetching conversation counts:', error);
+        return {};
+      }
+
+      // Aggregate counts in memory
+      const counts: Record<string, number> = {};
+      data?.forEach(c => {
+        counts[c.agent_id] = (counts[c.agent_id] || 0) + 1;
+      });
+
+      return counts;
+    },
+    enabled: !!agents && agents.length > 0,
+    refetchInterval: 30000
+  });
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -41,7 +75,7 @@ export const AgentsPage = () => {
 
   const filteredAgents = agents?.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase()) ||
-                          (agent.description?.toLowerCase() || '').includes(search.toLowerCase());
+      (agent.description?.toLowerCase() || '').includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || agent.status === statusFilter;
     return matchesSearch && matchesStatus;
   }) || [];
@@ -49,7 +83,7 @@ export const AgentsPage = () => {
   const handleToggleStatus = (id: string) => {
     const agent = agents?.find(a => a.id === id);
     if (!agent) return;
-    
+
     let newStatus: AgentStatus;
     if (agent.status === 'active') {
       newStatus = 'paused';
@@ -58,7 +92,7 @@ export const AgentsPage = () => {
     } else {
       newStatus = 'active';
     }
-    
+
     updateAgent.mutate({ id, data: { status: newStatus } });
   };
 
@@ -72,6 +106,15 @@ export const AgentsPage = () => {
       deleteAgent.mutate(agentToDelete);
       setDeleteDialogOpen(false);
       setAgentToDelete(null);
+    }
+  };
+
+  const handleEdit = (id: string) => {
+    const agent = agents?.find(a => a.id === id);
+    if (agent?.status === 'draft') {
+      navigate(`/agents/new?draftId=${id}`);
+    } else {
+      navigate(`/agents/${id}`);
     }
   };
 
@@ -94,8 +137,8 @@ export const AgentsPage = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder={t('agents.search')} 
+            <Input
+              placeholder={t('agents.search')}
               className="pl-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -115,15 +158,15 @@ export const AgentsPage = () => {
               </SelectContent>
             </Select>
             <div className="flex border border-border rounded-lg">
-              <Button 
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('grid')}
               >
                 <Grid className="w-4 h-4" />
               </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
+              <Button
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('list')}
               >
@@ -156,15 +199,18 @@ export const AgentsPage = () => {
             )}
           </div>
         ) : (
-          <div className={viewMode === 'grid' 
+          <div className={viewMode === 'grid'
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             : "space-y-4"
           }>
             {filteredAgents.map((agent) => (
-              <AgentCard 
-                key={agent.id} 
-                agent={agent}
-                onEdit={(id) => navigate(`/agents/${id}`)}
+              <AgentCard
+                key={agent.id}
+                agent={{
+                  ...agent,
+                  conversations: conversationCounts ? (conversationCounts[agent.id] || 0) : 0
+                }}
+                onEdit={handleEdit}
                 onToggleStatus={handleToggleStatus}
                 onDelete={handleDeleteClick}
               />

@@ -16,10 +16,10 @@ export function useDocuments(agentId?: string) {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ['documents', agentId],
+    queryKey: ['ah_documents', agentId],
     queryFn: async () => {
       let query = supabase
-        .from('documents')
+        .from('ah_documents')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -53,7 +53,7 @@ export function useCreateDocument() {
       if (!user) throw new Error('Not authenticated');
 
       const { data: document, error } = await supabase
-        .from('documents')
+        .from('ah_documents')
         .insert({
           user_id: user.id,
           name: data.name,
@@ -71,7 +71,7 @@ export function useCreateDocument() {
       return document as Document;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['ah_documents'] });
       toast({
         title: 'Document added',
         description: 'Processing will begin shortly.',
@@ -94,14 +94,14 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('documents')
+        .from('ah_documents')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['ah_documents'] });
       toast({
         title: 'Document deleted',
         description: 'The document has been removed.',
@@ -124,7 +124,7 @@ export function useRetryDocument() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { data, error } = await supabase
-        .from('documents')
+        .from('ah_documents')
         .update({ status: 'pending', error_message: null })
         .eq('id', id)
         .select()
@@ -134,7 +134,7 @@ export function useRetryDocument() {
       return data as Document;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['ah_documents'] });
       toast({
         title: 'Retrying...',
         description: 'Document will be processed again.',

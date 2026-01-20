@@ -1,11 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Bot, 
-  LayoutDashboard, 
-  FileText, 
-  MessageSquare, 
-  Settings, 
-  CreditCard, 
+import {
+  Bot,
+  LayoutDashboard,
+  FileText,
+  MessageSquare,
+  Settings,
+  CreditCard,
   BarChart3,
   Users,
   Shield,
@@ -13,7 +13,8 @@ import {
   Database,
   AlertTriangle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,7 +35,8 @@ export const Sidebar = () => {
   const userNavItems = [
     { icon: LayoutDashboard, label: t('nav.dashboard'), path: '/dashboard' },
     { icon: Bot, label: t('nav.agents'), path: '/agents' },
-    { icon: FileText, label: t('nav.documents'), path: '/documents' },
+
+    { icon: Sparkles, label: 'Playground', path: '/playground' },
     { icon: MessageSquare, label: t('nav.conversations'), path: '/conversations' },
     { icon: BarChart3, label: t('nav.analytics'), path: '/analytics' },
     { icon: CreditCard, label: t('nav.billing'), path: '/billing' },
@@ -46,12 +48,11 @@ export const Sidebar = () => {
     { icon: Users, label: t('nav.admin.users'), path: '/admin/users' },
     { icon: Bot, label: t('nav.admin.allAgents'), path: '/admin/agents' },
     { icon: BarChart3, label: t('nav.admin.metrics'), path: '/admin/metrics' },
+    { icon: CreditCard, label: 'Facturación', path: '/admin/billing' },
     { icon: Webhook, label: t('nav.admin.integrations'), path: '/admin/integrations' },
-    { icon: Database, label: t('nav.admin.aiConfig'), path: '/admin/ai-config' },
-    { icon: Shield, label: t('nav.admin.security'), path: '/admin/security' },
     { icon: AlertTriangle, label: t('nav.admin.dangerZone'), path: '/admin/danger' },
   ];
-  
+
   const isAdmin = roleData?.isAdmin || false;
   const isAdminRoute = location.pathname.startsWith('/admin');
   const navItems = isAdminRoute && isAdmin ? adminNavItems : userNavItems;
@@ -76,9 +77,9 @@ export const Sidebar = () => {
             <Bot className="w-5 h-5 text-primary-foreground" />
           </div>
         )}
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setCollapsed(!collapsed)}
           className={cn("h-8 w-8", collapsed && "mx-auto mt-2")}
         >
@@ -89,8 +90,8 @@ export const Sidebar = () => {
       {isAdmin && !collapsed && (
         <div className="px-4 py-2">
           <div className="flex gap-1 p-1 bg-muted/30 rounded-lg">
-            <Link 
-              to="/dashboard" 
+            <Link
+              to="/dashboard"
               className={cn(
                 "flex-1 text-center py-1.5 text-sm rounded-md transition-colors",
                 !isAdminRoute ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -98,8 +99,8 @@ export const Sidebar = () => {
             >
               {t('nav.user')}
             </Link>
-            <Link 
-              to="/admin" 
+            <Link
+              to="/admin"
               className={cn(
                 "flex-1 text-center py-1.5 text-sm rounded-md transition-colors",
                 isAdminRoute ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -120,8 +121,8 @@ export const Sidebar = () => {
               to={item.path}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-                isActive 
-                  ? "bg-primary text-primary-foreground" 
+                isActive
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent",
                 collapsed && "justify-center px-2"
               )}

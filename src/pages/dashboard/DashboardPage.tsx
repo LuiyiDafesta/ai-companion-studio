@@ -7,19 +7,78 @@ import { RecentConversations } from '@/components/dashboard/RecentConversations'
 import { UsageChart } from '@/components/dashboard/UsageChart';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
-import { useCredits } from '@/hooks/useCredits';
-import { useAgents } from '@/hooks/useAgents';
+import { useCredits, useDashboardStats } from '@/hooks/useCredits';
+import { useAgents, useUpdateAgent } from '@/hooks/useAgents';
+import { useSubscription, PLAN_LIMITS } from '@/hooks/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AgentStatus } from '@/types/database';
+
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { data: profile } = useProfile();
   const { data: credits } = useCredits();
+  const { data: stats } = useDashboardStats();
   const { data: agents, isLoading: agentsLoading } = useAgents();
+  const updateAgent = useUpdateAgent();
+  const { data: subscription } = useSubscription();
   const { t } = useLanguage();
+
+  // Fetch conversation counts per agent for the cards
+  const { data: conversationCounts } = useQuery({
+    queryKey: ['agent-conversations-count-dashboard', (agents || []).map(a => a.id).join(',')],
+    queryFn: async () => {
+      if (!agents || agents.length === 0) return {};
+
+      const agentIds = agents.map(a => a.id);
+
+      // Fetch all conversations for these agents (ids only)
+      const { data, error } = await supabase
+        .from('ah_public_conversations')
+        .select('agent_id')
+        .in('agent_id', agentIds);
+
+      if (error) {
+        console.error('Error fetching conversation counts:', error);
+        return {};
+      }
+
+      // Aggregate counts in memory
+      const counts: Record<string, number> = {};
+      data?.forEach(c => {
+        counts[c.agent_id] = (counts[c.agent_id] || 0) + 1;
+      });
+
+      return counts;
+    },
+    enabled: !!agents && agents.length > 0,
+    refetchInterval: 30000 // Update every 30s
+  });
 
   const displayName = profile?.full_name || 'there';
   const activeAgents = agents?.filter(a => a.status === 'active').length || 0;
+
+  const planType = subscription?.plan_type || 'free';
+  const planLimits = PLAN_LIMITS[planType];
+  const activeAgentsDisplay = `${activeAgents} / ${planLimits.agents}`;
+
+  const handleToggleStatus = (id: string) => {
+    const agent = agents?.find(a => a.id === id);
+    if (!agent) return;
+
+    let newStatus: AgentStatus;
+    if (agent.status === 'active') {
+      newStatus = 'paused';
+    } else if (agent.status === 'archived') {
+      newStatus = 'draft';
+    } else {
+      newStatus = 'active';
+    }
+
+    updateAgent.mutate({ id, data: { status: newStatus } });
+  };
 
   return (
     <DashboardLayout>
@@ -40,22 +99,24 @@ export const DashboardPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title={t('dashboard.activeAgents')}
-            value={activeAgents}
+            value={activeAgentsDisplay}
             icon={<Bot className="w-6 h-6" />}
           />
           <StatsCard
             title={t('dashboard.conversations')}
-            value={0}
+            value={stats?.conversations || 0}
             icon={<MessageSquare className="w-6 h-6" />}
           />
           <StatsCard
             title={t('dashboard.creditsRemaining')}
             value={credits?.balance.toLocaleString() || 0}
+            description={planLimits.label}
             icon={<CreditCard className="w-6 h-6" />}
           />
           <StatsCard
             title={t('dashboard.tokensUsed')}
-            value={credits?.total_used.toLocaleString() || 0}
+            value={(stats?.messages || 0).toLocaleString()}
+            description="Mensajes enviados"
             icon={<Zap className="w-6 h-6" />}
           />
         </div>
@@ -65,7 +126,7 @@ export const DashboardPage = () => {
             <UsageChart />
           </div>
           <div>
-            <RecentConversations />
+            <RecentConversations agents={agents} />
           </div>
         </div>
 
@@ -81,10 +142,14 @@ export const DashboardPage = () => {
           ) : agents && agents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {agents.slice(0, 3).map((agent) => (
-                <AgentCard 
-                  key={agent.id} 
-                  agent={agent}
+                <AgentCard
+                  key={agent.id}
+                  agent={{
+                    ...agent,
+                    conversations: conversationCounts ? (conversationCounts[agent.id] || 0) : 0
+                  }}
                   onEdit={(id) => navigate(`/agents/${id}`)}
+                  onToggleStatus={handleToggleStatus}
                 />
               ))}
             </div>

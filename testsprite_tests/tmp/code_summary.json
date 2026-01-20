@@ -1,0 +1,48 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "React",
+        "Vite",
+        "Supabase",
+        "TailwindCSS",
+        "Shadcn UI",
+        "React Query"
+    ],
+    "features": [
+        {
+            "name": "Chat Widget",
+            "description": "Public-facing chat widget component for website embedding.",
+            "files": [
+                "src/components/widget/ChatWidget.tsx",
+                "src/lib/publicWidgetApi.ts",
+                "src/hooks/useWebhookUrl.ts"
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "description": "Main dashboard showing statistics and recent activity.",
+            "files": [
+                "src/pages/dashboard/DashboardPage.tsx",
+                "src/components/dashboard/StatsCard.tsx",
+                "src/components/dashboard/AgentCard.tsx"
+            ]
+        },
+        {
+            "name": "Agent Management",
+            "description": "CRUD operations for AI agents.",
+            "files": [
+                "src/pages/agents/AgentsPage.tsx",
+                "src/pages/agents/EditAgentPage.tsx",
+                "src/hooks/useAgents.ts"
+            ]
+        },
+        {
+            "name": "Integrations",
+            "description": "Configuration for external integrations like Webhooks.",
+            "files": [
+                "src/pages/admin/AdminIntegrationsPage.tsx",
+                "src/hooks/useWebhooks.ts"
+            ]
+        }
+    ]
+}
